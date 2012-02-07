@@ -26,7 +26,7 @@ def retrieve_fasta_files (fasta_file_list, out_dir):
 
 		# for each fasta file a 6 character unique tag is generated
 		while tag in tag_list or tag == '': # check if the tag is unique
-			tag = ''.join(random.choice(string.ascii_uppercase + string.digits) 
+			tag = ''.join(random.choice(string.ascii_uppercase + string.digits) # why not use MD5?
 				for x in range(6)) # generate the actual tag
 		else:
 			# store the tag in a list to prevent the same tag being used twice
