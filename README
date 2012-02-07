@@ -1,0 +1,61 @@
+Description:
+
+The 454 pipeline streamlines the QIIME package and allows easy
+clustering and identification of environmental 454 sequence reads.
+
+
+Scripts:
+
+This project contains the following scripts:
+
+ - pipeline.py			The main script that takes the user
+				files and executes the other scripts
+				and programs.
+ 
+ - tag_fasta_files.py		When dealing with multiple datasets,
+				each set can be tagged to identify the
+				and compare different datasets during
+				downstream analysis.
+
+ - pick_otu_rep.py		It takes the OTU output files from
+				QIIME's 'pick_otus' script and based
+				on the users settings it picks a
+				representative sequence for each cluster.
+
+ - custom_blast_db.py		Uses the NCBI-blast+ program to set up
+				a blast database based on a reference
+				set and then blasts a set of sequences
+				against the database to identify these.
+
+ - blast.py			Identifies sequences by blasting them
+				against the genbank database.
+
+ - cluster_freq.py		When dealing with multiple input files
+				it takes the clustering results and
+				compares how much each dataset has
+				contributed to a certain cluster.
+
+Requirements:
+
+This project require the following the following software / tools:
+
+ - Python 2.7 or 3.2		The latest version of either python 2.*
+				or 3.* are needed to support the modules
+				used in the scripts. (most notably the
+				'argparse' module).
+
+ - Biopython 1.58		Biopython is used to deal with fasta
+				sequences, multiple sequence alignments
+				and genbank files.
+
+ - QIIME pipeline		This project uses the QIIME pipeline
+				to cluster the sequences into OTUs. The
+				pipeline uses the 'pick_otus' script
+				and modules to cluster sequences with
+				a wide array of cluster programs.
+
+ - NCBI-Blast-2.2.25+		Blast+ is used to identify sequences
+				with a custom made refrence database.
+
+ - muscle3.8.31			With muscle multiple sequence alignments
+				are made of the cluster results.
