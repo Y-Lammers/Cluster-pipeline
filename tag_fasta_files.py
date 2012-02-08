@@ -1,3 +1,8 @@
+# The tag_fasta_files.py script provides a fasta file with 'tags' for each
+# sequence header, based on these tags the input files from which sequences
+# came from can be traced after clustering.
+
+
 # import the argparse module to handle the input commands
 import argparse
 
