@@ -30,17 +30,16 @@ args = parser.parse_args()
 def size_filt (otufile, minsize):
 	# retrieve the otu clusters that meet the size restriction
 	
-	count, otu_seq_dic = 1, {}	
+	otu_seq_dic = {}	
 
 	# parse through the OTU file
 	for line in open(otufile, 'r'):
 		# split each OTU into a set of fasta header that make up
 		# the OTU, if the number of header matches the size threshold
 		# the cluster is stored
-		array = line.replace('\n', '').split('\t')[1:]
-		if len(array) >= minsize: 
-			otu_seq_dic[count] = array
-		count += 1
+		array = line.replace('\n', '').split('\t')
+		if len(array[1:]) >= minsize: 
+			otu_seq_dic[array[0]] = array[1:]
 
 	return otu_seq_dic
 
@@ -90,12 +89,13 @@ def get_consensus ():
 	# alignment files and fasta files
 	from Bio import AlignIO
 	from Bio.Align import AlignInfo	
-	from Bio.SeqRecord import SeqRecord	
+	#from Bio.SeqRecord import SeqRecord	
 
 	# read the multiple sequence alignment file
 	alignment = AlignInfo.SummaryInfo(AlignIO.read('temp_align.txt', 'fasta'))
 	# return a consensus based on the alignment
-	return alignment.dumb_consensus()	
+	sequence = alignment.dumb_consensus(ambiguous='N')
+	return sequence
 	
 def get_rand_seq (seq_dic, otu_seq_dic, out_path):
 	from random import choice
@@ -111,7 +111,6 @@ def get_rand_seq (seq_dic, otu_seq_dic, out_path):
 
 def get_cons_seq (seq_dic, otu_seq_dic, seq_number, out_path):
 	from subprocess import call
-	#from Bio.Align import AlignInfo
 	from random import sample
 	
 	# get the headers that are present in each OTU and the path to the muscle executable
