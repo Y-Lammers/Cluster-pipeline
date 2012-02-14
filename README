@@ -34,6 +34,11 @@ This project contains the following scripts:
 				it takes the clustering results and
 				compares how much each dataset has
 				contributed to a certain cluster.
+				
+ - cluster_stat.py		Takes the cluster OTU file and retrieve
+ 				basic information about the number of 
+ 				sequences used, number of cluster and 
+ 				the size of the clusters.
 
 Requirements:
 
