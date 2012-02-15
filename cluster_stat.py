@@ -43,14 +43,12 @@ def write_results (otu_info_list, otufile, outfile):
 	outcsv = open(outfile, 'w')
 	
 	# write basic stats
-	outcsv.write(otufile)
-	outcsv.write('Number of sequences,' + str(out_info_list[1]))
-	outcsv.write('Number of clusters,' + str(len(out_info_list[0])))
-	outcsv.write('Size of cluster,number of clusters for size')
+	outcsv.write(otufile + '\nNumber of sequences,' + str(otu_info_list[1]) + '\nNumber of clusters,' + 
+			str(len(otu_info_list[0])) + '\nSize of cluster,number of clusters for size\n')
 	
 	# for each cluster size, print the results
 	for size in sorted(otu_info_list[2].iterkeys()):
-		outcsv.write(str(size) + ',' + str(otu_info_list[2][size]))
+		outcsv.write(str(size) + ',' + str(otu_info_list[2][size]) + '\n')
 	
 	outcsv.close()
 	

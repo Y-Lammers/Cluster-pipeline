@@ -4,6 +4,7 @@
 
 # import the argparse module to handle the input commands
 import argparse
+import sys
 
 # get the commandline arguments for the various input file, settings and output files
 parser = argparse.ArgumentParser(description = 'Pipeline to process 454 reads, clusters and identifies')
@@ -79,7 +80,7 @@ def cluster (fasta_file, similarity, program, cluster, out_dir):
 	# run the pick_otus.py script with the selected fasta files and cluster method
 	p = call(['pick_otus.py', '-i', fasta_file, '-o', out_dir, '-m', program, '-c', cluster, '-s', str(similarity)])
 
-def cluster_stat (cluster_file, out_dir):
+def cluster_stat (pipe_path, cluster_file, out_dir):
 	from subprocess import call
 	
 	# set the outputfile
@@ -87,7 +88,7 @@ def cluster_stat (cluster_file, out_dir):
 	
 	# used the cluster_stat.py script to retrieve cluster information for the
 	# cluster file
-	p = call(['cluster_stat.py', '-c', cluster_file, '-o', out_file])
+	p = call(['python', (pipe_path + 'cluster_stat.py'), '-c', cluster_file, '-o', out_file])
 	
 def pick_rep_seq (pipe_path, fasta_file, cluster_file, method, min_size, rand, out_dir):
 	from subprocess import call
@@ -151,7 +152,7 @@ def main ():
 	cluster_file = out_dir + fasta_file.split('.')[0].split('/')[-1] + '_otus.txt'
 	
 	# get the cluster information
-	cluster_stat(cluster_file, out_dir)
+	cluster_stat(pipe_path, cluster_file, out_dir)
 	
 	# continue with the analysis or stop if the pipeline was only used for testing
 	if args.pipeline == 'test': return
