@@ -49,7 +49,8 @@ def run_db (sequence_fasta_file, ncbi_path, db_name, outfile):
 	#run the fasta file against the reference database with the blastn tool
 	print('Blasting query file against the database . . .')
 	p = call([(ncbi_path + 'blastn'), '-query', sequence_fasta_file, '-db',
-			db_name, '-out', outfile, '-evalue', '10', '-outfmt', '10'])
+			db_name, '-out', outfile, '-evalue', '10', '-outfmt', '10',
+			'-max_target_seqs', '1'])
 	
 def clean_up (db_name):
 	# import module that can run bash commands
@@ -66,11 +67,11 @@ def parse_blast_result (csv_path):
 	
 	# write the header
 	csvfile = open(csv_path, 'w')
-	csvfile.write('Blast hit\tSequence\tPercentage matched\tlength match\tmismatches\tgaps\tquery start\tquery end\tsubject start\tsubject end\te-value\tbitscore\n')
+	csvfile.write('\t'.join('Blast hit','Sequence','Percentage matched','length match','mismatches','gaps','query start','query end','subject start','subject end','e-value','bitscore\n'))
 	
 	# add quotes around the blast hit, to simplify the importation of the csv file into spreadsheat programs
 	for line in lines:
-		line = line.split('\t')
+		line = line.split(',')
 		info = '\t'.join(line[-11:])
 		blast = '\"' + '\t'.join(line[:-(len(line)-1)]) + '\"'
 		csvfile.write(blast + '\t' + info)

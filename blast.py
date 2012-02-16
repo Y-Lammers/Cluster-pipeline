@@ -23,7 +23,7 @@ def writeresult (result, out_path, header):
 	# checks if there is already a header present, if not the header will be writen
 	# to the output file
 	if header == 'yes':
-		outfile.write('Blast hit\tSequence\tPercentage matched\tlength match\tmismatches\tgaps\tquery start\tquery end\tsubject start\tsubject end\te-value\tbitscore\tspecies\ttaxonomy\n')
+		outfile.write('\t'.join('Blast hit','Sequence','Percentage matched','length match','mismatches','gaps','query start','query end','subject start','subject end','e-value','bitscore','species','taxonomy\n'))
 	outfile.write(result)
 	outfile.close()
 
