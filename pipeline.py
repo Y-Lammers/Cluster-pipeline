@@ -124,13 +124,15 @@ def compare_cluster (pipe_path, cluster_file, blast_file, tag_file, min_size, ou
 
 	# when multiple fasta files where clusted, see where the sequences in a cluster come from
 	# this is done with the cluster_freq.py script
-	output_file = out_dir + 'cluster_stats.csv'
+	output_file = out_dir + 'cluster_input_seqs.csv'
 	p = call(['python', (pipe_path + 'cluster_freq.py'), '--cluster_file', cluster_file, '--output_file', output_file,
 			'--tag_file', tag_file, '--blast', blast_file, '--min_size', str(min_size)])	
 
 	return output_file
 
 def main ():
+	# import time module to bench the cluster run
+	import time
 	
 	# get pipeline path
 	pipe_path = get_path(sys.argv[0])
@@ -142,25 +144,31 @@ def main ():
 		
 	# check if there are multiple files that might need tagging
 	if len(args.input_file) > 1:
+		print('Tagging input files')
 		taged_files = tag(pipe_path, args.input_file, out_dir)
+		print('Merging tagged files')
 		fasta_file = combine(taged_files, out_dir)
 	else:
 		fasta_file = args.input_file[0]
 	
 	# cluster the fasta file with the desired settings
+	print('Clustering sequence file')
+	time1 = time()
 	cluster(fasta_file, args.similarity, args.program, args.cluster, out_dir)
-	cluster_file = out_dir + fasta_file.split('.')[-2].split('/')[-1] + '_otus.txt'
+	cluster_file = out_dir + '.'.join(fasta_file.split('.')[:-1]).split('/')[-1] + '_otus.txt'
 	
 	# get the cluster information
-	cluster_stat(pipe_path, cluster_file, out_dir)
+	cluster_stat(pipe_path, cluster_file, time.strftime('%H:%M:%S', time.gmtime(int(time.time() - time1))), out_dir)
 	
 	# continue with the analysis or stop if the pipeline was only used for testing
 	if args.pipeline == 'test': return
 	
 	# pick representative sequence for each cluster
+	print('Picking representative sequences for clusters')
 	rep_seq = pick_rep_seq(pipe_path, fasta_file, cluster_file, args.pick_rep, args.min_size, args.rand_cons, out_dir)
 	
 	# identify the clusters
+	print('Identifying clusters')
 	if args.blast == 'genbank':
 		iden_file = genbank_blast(pipe_path, rep_seq, out_dir)
 	else: iden_file = local_blast(pipe_path, rep_seq, args.reference, out_dir)

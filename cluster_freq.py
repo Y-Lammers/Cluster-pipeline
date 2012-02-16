@@ -25,10 +25,10 @@ def get_blast (blast_file):
 	# parse the blast file and retrieve the identications
 	blast_dic = {}	
 	for line in open(blast_file, 'r'):
-		line = line.split(',')
+		line = line.split('\t')
 		for i in range(0, len(line)):
 			if '_cluster_' in line[i]:
-				blast_dic[line[i].split('_cluster_')[0]] = [','.join(line[:-i]), line[i]]
+				blast_dic[line[i].split('_cluster_')[0]] = ['\t'.join(line[:-i]), line[i]]
 
 	return blast_dic
 	

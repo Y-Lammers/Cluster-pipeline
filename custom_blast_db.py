@@ -66,14 +66,14 @@ def parse_blast_result (csv_path):
 	
 	# write the header
 	csvfile = open(csv_path, 'w')
-	csvfile.write('Blast hit,Sequence,Percentage matched,length match,mismatches,gaps,query start,query end,subject start,subject end,e-value,bitscore\n')
+	csvfile.write('Blast hit\tSequence\tPercentage matched\tlength match\tmismatches\tgaps\tquery start\tquery end\tsubject start\tsubject end\te-value\tbitscore\n')
 	
 	# add quotes around the blast hit, to simplify the importation of the csv file into spreadsheat programs
 	for line in lines:
-		line = line.split(',')
-		info = ','.join(line[-11:])
-		blast = '\"' + ','.join(line[:-(len(line)-1)]) + '\"'
-		csvfile.write(blast + ',' + info)
+		line = line.split('\t')
+		info = '\t'.join(line[-11:])
+		blast = '\"' + '\t'.join(line[:-(len(line)-1)]) + '\"'
+		csvfile.write(blast + '\t' + info)
 		
 
 def main ():

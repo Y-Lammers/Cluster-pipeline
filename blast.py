@@ -23,7 +23,7 @@ def writeresult (result, out_path, header):
 	# checks if there is already a header present, if not the header will be writen
 	# to the output file
 	if header == 'yes':
-		outfile.write('Blast hit,Sequence,Percentage matched,length match,mismatches,gaps,query start,query end,subject start,subject end,e-value,bitscore,species,taxonomy\n')
+		outfile.write('Blast hit\tSequence\tPercentage matched\tlength match\tmismatches\tgaps\tquery start\tquery end\tsubject start\tsubject end\te-value\tbitscore\tspecies\ttaxonomy\n')
 	outfile.write(result)
 	outfile.close()
 
@@ -107,14 +107,14 @@ def parse_seq_file (seq_path, out_path):
 						taxonomy, organism = tax_org[0], tax_org[1]
 					
 						# prepare and write the output
-						output = ','.join([('\"' + alignment.title + '\"'), seq.id, percent_match, str(match_length), str(mismatch), str(hsp.gaps), str(hsp.query_start), query_end, str(hsp.sbjct_start), sbjct_end, str(hsp.expect), str(hsp.bits), organism, taxonomy, '\n'])
+						output = '\t'.join([('\"' + alignment.title + '\"'), seq.id, percent_match, str(match_length), str(mismatch), str(hsp.gaps), str(hsp.query_start), query_end, str(hsp.sbjct_start), sbjct_end, str(hsp.expect), str(hsp.bits), organism, taxonomy, '\n'])
 						writeresult(output, out_path, header)
 						header = 'no'
 
 		# write the 'no blast hit found' message to the output file if no
 		# blast result could be obtained for a fasta sequence
 		else: 
-			writeresult(','.join(['no blast hit found', seq.id, '\n']), out_path, header)
+			writeresult('\t'.join(['no blast hit found', seq.id, '\n']), out_path, header)
 	
 parse_seq_file(args.i, args.o)
 

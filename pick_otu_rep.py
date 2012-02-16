@@ -103,7 +103,7 @@ def get_rand_seq (seq_dic, otu_seq_dic, out_path):
 	# keys = otu_seq_dic.keys()
 	
 	# parse through the dictionary containing the headers for each otu
-	for item in out_seq_dic: #keys:
+	for item in otu_seq_dic: #keys:
 		# randomly select 1 header to represent the otu
 		header = choice(otu_seq_dic[item])
 		# the header + sequence are writen to the output fasta file

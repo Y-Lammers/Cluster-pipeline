@@ -12,6 +12,8 @@ parser = argparse.ArgumentParser(description = 'Gather information about the for
 
 parser.add_argument('-c', metavar='cluster file', type=str, 
 			help='enter the cluster (otu) file')
+parser.add_argument('-t', metavar='time', type=str, 
+			help='time it took for the cluster process to complete', default='')
 parser.add_argument('-o', metavar='output file', type=str, 
 			help='enter the output file')
 
@@ -36,25 +38,25 @@ def parse_otu (otufile):
 	
 	return [otu_seq_dic, sequences, otu_size_dic]
 	
-def write_results (otu_info_list, otufile, outfile):
+def write_results (otu_info_list, otufile, time, outfile):
 	# get the results and write them to the output file
 	
 	# open the output file
 	outcsv = open(outfile, 'w')
 	
 	# write basic stats
-	outcsv.write(otufile + '\nNumber of sequences,' + str(otu_info_list[1]) + '\nNumber of clusters,' + 
-			str(len(otu_info_list[0])) + '\nSize of cluster,number of clusters for size\n')
+	outcsv.write(otufile + '\nNumber of sequences\t' + str(otu_info_list[1]) + '\nNumber of clusters\t' + 
+			str(len(otu_info_list[0])) + '\nCluster time\t' + time + '\nSize of cluster\tnumber of clusters for size\n')
 	
 	# for each cluster size, print the results
 	for size in sorted(otu_info_list[2].iterkeys()):
-		outcsv.write(str(size) + ',' + str(otu_info_list[2][size]) + '\n')
+		outcsv.write(str(size) + '\t' + str(otu_info_list[2][size]) + '\n')
 	
 	outcsv.close()
 	
 def main ():
 	
-	write_results(parse_otu(args.c), args.c, args.o)	
+	write_results(parse_otu(args.c), args.c, args.t, args.o)	
 
 if __name__ == "__main__":
     main()
