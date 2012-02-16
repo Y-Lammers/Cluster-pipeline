@@ -149,7 +149,7 @@ def main ():
 	
 	# cluster the fasta file with the desired settings
 	cluster(fasta_file, args.similarity, args.program, args.cluster, out_dir)
-	cluster_file = out_dir + fasta_file.split('.')[0].split('/')[-1] + '_otus.txt'
+	cluster_file = out_dir + fasta_file.split('.')[-2].split('/')[-1] + '_otus.txt'
 	
 	# get the cluster information
 	cluster_stat(pipe_path, cluster_file, out_dir)
