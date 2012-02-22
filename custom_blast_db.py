@@ -17,6 +17,8 @@ parser.add_argument('-o', metavar='output file', type=str,
 			help='enter the output file')
 parser.add_argument('-r', metavar='reference file', type=str, 
 			help='enter the reference file on wich the blast database will be based')
+parser.add_argument('-b', metavar='blast headers', type=str, 
+			help='does the reference file contain blast headers (indicated by |\'s in the name) yes / no (default" no)', default='no')			
 args = parser.parse_args()
 
 def paths():
@@ -40,7 +42,7 @@ def make_db (ref_fasta_file, ncbi_path):
 	
 	#make a reference database with the makeblastdb tool
 	p = call([(ncbi_path + 'makeblastdb'), '-in', ref_fasta_file, 
-			'-dbtype', 'nucl', '-parse_seqids', '-hash_index'])
+			'-dbtype', 'nucl', '-parse_seqids', '-hash_index', '-max_file_sz', '5GB'])
 
 def run_db (sequence_fasta_file, ncbi_path, db_name, outfile):
 	# import module that allows the blastn tool to be run
@@ -67,7 +69,7 @@ def parse_blast_result (csv_path):
 	
 	# write the header
 	csvfile = open(csv_path, 'w')
-	csvfile.write('\t'.join('Blast hit','Sequence','Percentage matched','length match','mismatches','gaps','query start','query end','subject start','subject end','e-value','bitscore\n'))
+	csvfile.write('\t'.join(['Query','Sequence','Percentage matched','length match','mismatches','gaps','query start','query end','subject start','subject end','e-value','bitscore\n']))
 	
 	# add quotes around the blast hit, to simplify the importation of the csv file into spreadsheat programs
 	for line in lines:
@@ -76,11 +78,31 @@ def parse_blast_result (csv_path):
 		blast = '\"' + '\t'.join(line[:-(len(line)-1)]) + '\"'
 		csvfile.write(blast + '\t' + info)
 		
+def scan_fasta_file (fasta_path):
+	# import modules for fasta sequence handling
+	from Bio import SeqIO
+	from Bio.SeqRecord import SeqRecord
+
+	# read the fasta sequences
+	seq_list = [seq for seq in SeqIO.parse(fasta_path, 'fasta')]
+
+	
+	out_file = open(fasta_path, 'w')
+
+	# replace the '|' signs that cause blastmakedb to crash, overwrite the old file
+	for seq in seq_list:
+		SeqIO.write(SeqRecord(seq.seq, id=seq.id.replace('|',''), description=''), out_file, 'fasta')
+
+	out_file.close()
 
 def main ():
 	# make the blast database
-	make_db(args.r, paths()[1])
-	
+	if args.b == 'no':
+		make_db(args.r, paths()[1])
+	else:
+		scan_fasta_file(args.r)
+		make_db(args.r, paths()[1])
+		
 	# blast the fasta file against the newly created database
 	run_db(args.i, paths()[1], args.r, args.o)
 

@@ -122,7 +122,6 @@ def parse_blast_align (seq, out_path):
 	# write the 'no blast hit found' message to the output file if no
 	# blast result could be obtained for a fasta sequence
 	else: 
-		print('no hit found for %s' % seq.id)
 		writeresult('\t'.join(['no blast hit found', seq.id, '\n']), out_path)
 		
 	return
@@ -162,7 +161,7 @@ def parse_blast_result (csv_path):
 	
 	# write the header
 	csvfile = open(csv_path, 'w')
-	csvfile.write('\t'.join(['Blast hit','Sequence','Percentage matched','length match',
+	csvfile.write('\t'.join(['Query','Sequence','Percentage matched','length match',
 			'mismatches','gaps','query start','query end','subject start',
 			'subject end','e-value','bitscore','species','taxonomy\n']))
 	
@@ -176,12 +175,8 @@ def main ():
 	if args.t > 10: parse_seq_file(args.i, 10, args.o)
 	else: parse_seq_file(args.i, args.t, args.o)
 	
-	print('adding header to the csv file')
-	
 	# normalize the output
 	parse_blast_result(args.o)
-	
-	print('done')
 
 if __name__ == "__main__":
     main()

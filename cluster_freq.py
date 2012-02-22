@@ -25,10 +25,11 @@ def get_blast (blast_file):
 	# parse the blast file and retrieve the identications
 	blast_dic = {}	
 	for line in open(blast_file, 'r'):
-		line = line.split('\t')
-		for i in range(0, len(line)):
-			if '_cluster_' in line[i]:
-				blast_dic[line[i].split('_cluster_')[0]] = ['\t'.join(line[:-i]), line[i]]
+		if 'Percentage matched' not in line:
+			line = line.replace('\"','').split('\t')
+			for i in range(0, len(line)):
+				if '_cluster_' in line[i]:
+					blast_dic[line[i].split('_cluster_')[0]] = [line[i+1], line[i]]
 
 	return blast_dic
 	
@@ -50,6 +51,7 @@ def otu_freq_dist (otufile, tag_list, blast_dic, min_size, out_path):
 	
 	# retrieve the otu clusters that meet the size restriction
 	header = 'yes'
+	blast_key = blast_dic.keys()
 	for line in open(otufile, 'r'):
 		array = line.replace('\n', '').split('\t')[1:]
 		if len(array) >= min_size:
@@ -59,7 +61,8 @@ def otu_freq_dist (otufile, tag_list, blast_dic, min_size, out_path):
 					tag_dic[seq.split('_')[0]] += 1
 				except:
 					tag_dic[seq.split('_')[0]] = 1
-				if seq in blast_dic: blast = [blast_dic[seq][1], blast_dic[seq][0]]
+				if seq in blast_key:
+					blast = [blast_dic[seq][1], blast_dic[seq][0]]
 			if blast[0] == 'seq': blast[0] = seq
 			write_result(tag_dic, tag_list, cluster, header, blast, out_path)
 			header = 'no'

@@ -11,20 +11,20 @@ parser = argparse.ArgumentParser(description = 'Pipeline to process 454 reads, c
 
 parser.add_argument('--input_file', metavar='fasta files', type=str, 
 			help='Enter the 454 sequence fasta file(s)', nargs='+')
-parser.add_argument('--pipeline', metavar='pipeline', type=str, 
-			help='The way the 454 reads will be processed (only relevant if multiple input files are used): combine (input files are combined in a single file) / cluster (input files are tagged and clustered together, bassed on tags the origin of reads in clusters can be traced) / test (run the cluster step and write the cluster info to a output file) (default: combine)', default='combine')
 parser.add_argument('--out_dir', metavar='output directory', type=str, 
 			help='Enter the output directory (full path)')
+parser.add_argument('--pipeline', metavar='pipeline', type=str, 
+			help='The way the 454 reads will be processed (only relevant if multiple input files are used): combine (input files are combined in a single file) / cluster (input files are tagged and clustered together, bassed on tags the origin of reads in clusters can be traced) / test (run the cluster step and write the cluster info to a output file) (default: combine)', default='combine')
 parser.add_argument('--program', metavar='cluster program', type=str, 
-			help='The cluster program that will be used to cluster the 454 reads: uclust / mothur (default: uclust)', default='uclust')
-parser.add_argument('--cluster', metavar='cluster method', type=str, 
-			help='The cluster method that will be used to cluster the 454 reads: furthest / nearest / average (default: furthest)', default='furthest')
-parser.add_argument('--similarity', metavar='sequene similarity for clustering', type=float, 
-			help='Sequence similarity threshold used for clustering (default: 0.95)', default=0.97)
+			help='The cluster program that will be used to cluster the 454 reads: uclust / cdhit (default: uclust)', default='uclust')
+parser.add_argument('--similarity', metavar='sequene similarity for clustering', type=str, 
+			help='Sequence similarity threshold used for clustering (default: 0.97)', default='0.97')
 parser.add_argument('--blast', metavar='blast method', type=str, 
 			help='The blast method used for identifying the reads: genbank / Local (default: genbank', default='genbank')
 parser.add_argument('--reference', metavar='reference files', type=str, 
 			help='Reference file(s) used for the local blast search', nargs='+')
+parser.add_argument('--blast_header', metavar='blast fasta headers', type=str, 
+			help='does the reference fasta file contain blast headers (indicated by |\'s in the name) yes / no (default" no)', default='no')			
 parser.add_argument('--pick_rep', metavar='otu sequence picking', type=str, 
 			help='Method how the OTU representative sequence will be picked: random / consensus / combined (default: random)', default='random')
 parser.add_argument('--min_size', metavar='minimum OTU size', type=int, 
@@ -40,11 +40,10 @@ def get_path (pipeline):
 	path = Popen(['pwd'], stdout=PIPE)
 	path = path.communicate()[0].replace('\n','')
 
-	if '/home/' in path: path += '/' + '/'.join(pipeline.split('/')[:-1]) + '/'
-	else: path = '/' + '/'.join(pipeline.split('/')[:-1]) + '/'
+	if '/home/' in path: path += '/' + '/'.join(pipeline.split('/')[:-1])
+	else: path = '/' + '/'.join(pipeline.split('/')[:-1])
 
 	return path
-
 
 def check_dir (out_dir):
 	import os
@@ -64,23 +63,25 @@ def tag (pipe_path, fasta_files, out_dir):
 
 	return tag_files
 
-def combine (fasta_files, out_dir):
+def combine (fasta_files, file_name, out_dir):
 	from subprocess import call
 	
 	# catenate multiple fasta files into a single file for clustering
-	command = 'cat ' + ' '.join(fasta_files) + ' > ' + out_dir + 'combined_fasta_file.fasta'
+	command = 'cat ' + ' '.join(fasta_files) + ' > ' + out_dir + file_name
 	#p = call(['cat'] + fasta_files + [('>' + out_dir + 'combined_fasta_file.fasta')])
 	p = call(command, shell=True)
 
-	return (out_dir + 'combined_fasta_file.fasta')	
+	return (out_dir + file_name)	
 
-def cluster (fasta_file, similarity, program, cluster, out_dir):
+def cluster (fasta_file, similarity, program, out_dir):
 	from subprocess import call
-
-	# run the pick_otus.py script with the selected fasta files and cluster method
-	p = call(['pick_otus.py', '-i', fasta_file, '-o', out_dir, '-m', program, '-c', cluster, '-s', str(similarity)])
-
-def cluster_stat (pipe_path, cluster_file, out_dir):
+	
+	# run the QIIME pick_otus.py script for fasta sequences and settings
+	p = call(['pick_otus.py', '-i', fasta_file, '-o', out_dir, '-m', program, '-s', similarity])
+	
+	return
+	
+def cluster_stat (pipe_path, cluster_file, clust_time, out_dir):
 	from subprocess import call
 	
 	# set the outputfile
@@ -88,7 +89,7 @@ def cluster_stat (pipe_path, cluster_file, out_dir):
 	
 	# used the cluster_stat.py script to retrieve cluster information for the
 	# cluster file
-	p = call(['python', (pipe_path + 'cluster_stat.py'), '-c', cluster_file, '-o', out_file])
+	p = call(['python', (pipe_path + 'cluster_stat.py'), '-c', cluster_file, '-t', clust_time, '-o', out_file])
 	
 def pick_rep_seq (pipe_path, fasta_file, cluster_file, method, min_size, rand, out_dir):
 	from subprocess import call
@@ -110,12 +111,12 @@ def genbank_blast (pipe_path, fasta_file, out_dir):
 		
 	return output_file
 
-def local_blast (pipe_path, fasta_file, reference_files, out_dir):
+def local_blast (pipe_path, fasta_file, reference, blast_header, out_dir):
 	from subprocess import call
 	
 	# blast the sequences against a local blast database with the custom_blast_db.py script
 	output_file = out_dir + 'blast_result.csv'
-	p = call(['python', (pipe_path + 'custom_blast_db.py'), '-i', fasta_file, '-o', output_file, '-r'] + reference_files)
+	p = call(['python', (pipe_path + 'custom_blast_db.py'), '-i', fasta_file, '-o', output_file, '-r', reference, '-b', blast_header])
 
 	return output_file
 
@@ -147,14 +148,14 @@ def main ():
 		print('Tagging input files')
 		taged_files = tag(pipe_path, args.input_file, out_dir)
 		print('Merging tagged files')
-		fasta_file = combine(taged_files, out_dir)
+		fasta_file = combine(taged_files, 'combined_fasta_file.fasta', out_dir)
 	else:
 		fasta_file = args.input_file[0]
 	
 	# cluster the fasta file with the desired settings
 	print('Clustering sequence file')
 	time1 = time.time()
-	cluster(fasta_file, args.similarity, args.program, args.cluster, out_dir)
+	cluster(fasta_file, args.similarity, args.program, out_dir)	
 	cluster_file = out_dir + '.'.join(fasta_file.split('.')[:-1]).split('/')[-1] + '_otus.txt'
 	
 	# get the cluster information
@@ -171,7 +172,15 @@ def main ():
 	print('Identifying clusters')
 	if args.blast == 'genbank':
 		iden_file = genbank_blast(pipe_path, rep_seq, out_dir)
-	else: iden_file = local_blast(pipe_path, rep_seq, args.reference, out_dir)
+	else: 
+		# check if there are multiple reference files
+		if len(args.reference) > 1:
+			print('Merging reference files')
+			reference = combine(args.reference, 'combined_reference_file.txt', out_dir)
+		else:
+			reference = args.reference[0]
+		
+		iden_file = local_blast(pipe_path, rep_seq, reference, args.blast_header, out_dir)
 	
 	# combine cluster and identification files (only when multiple fasta files are used
 	# and the --pipeline parameter is set to cluster
