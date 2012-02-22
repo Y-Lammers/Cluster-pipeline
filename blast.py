@@ -14,16 +14,15 @@ parser.add_argument('-i', metavar='fasta file', type=str,
 			help='enter the fasta file')
 parser.add_argument('-o', metavar='output file', type=str, 
 			help='enter the output file')
+parser.add_argument('-t', metavar='number of blast threads', type=int, 
+			help='enter the number of blast threads, warning a large number of threads can slow down the search (max: 10)', default=4)			
 args = parser.parse_args()
 
-def writeresult (result, out_path, header):
+def writeresult (result, out_path):
 	# write the blast results to the output file
-
 	outfile = open(out_path, 'a')
 	# checks if there is already a header present, if not the header will be writen
 	# to the output file
-	if header == 'yes':
-		outfile.write('\t'.join('Blast hit','Sequence','Percentage matched','length match','mismatches','gaps','query start','query end','subject start','subject end','e-value','bitscore','species','taxonomy\n'))
 	outfile.write(result)
 	outfile.close()
 
@@ -49,7 +48,7 @@ def obtain_tax (code):
 def blast_sequence (seq):
 	# The blast modules are imported from biopython
 	from Bio.Blast import NCBIWWW, NCBIXML
-	
+
 	# Blast the sequence against the NCBI nucleotide database
 	try:
 		result_handle = NCBIWWW.qblast('blastn', 'nt', seq.format('fasta'))
@@ -58,63 +57,131 @@ def blast_sequence (seq):
 	except:
 		return ''		
 	
+def get_blast_align (seq):
+	# import the biopython module to deal with fasta parsing
+	from Bio import SeqIO
+	import time
 	
+	# Try to get the blast results
+	blastrun, time1 = blast_sequence(seq), time.time()
 
-def parse_seq_file (seq_path, out_path):
+	# Keep trying to get a result for 5 minutes if no result was obtained
+	while blastrun == '' and time.time()-time1 < 300:
+		align = blast_sequence(seq)
+
+	# return a timeout message if no result could be obtained
+	if blastrun == '':
+		blastrun = 'error'
+		print('timeout sequence %s' % seq.id)		
+
+	return blastrun
+	
+def get_output (hsp, seq, alignment):
+	# get the blast information that is
+	# needed to write to the results
+	match_length = len(hsp.match)
+	mismatch = len(hsp.match.replace('|',''))
+	percent_match = str(100 - ((float(mismatch) / match_length)*100))
+
+	if list(hsp.frame)[0] == 1: query_end = str(hsp.query_start + match_length)
+	else: query_end = str(hsp.query_start - match_length)
+
+	if list(hsp.frame)[1] == 1: sbjct_end = str(hsp.sbjct_start + match_length)
+	else: sbjct_end = str(hsp.sbjct_start - match_length)
+
+	# get the taxonomic and species information
+	tax_org = obtain_tax(alignment.title.split('|')[1])
+	taxonomy, organism = tax_org[0], tax_org[1]
+				
+	# prepare the output
+	output = '\t'.join([('\"' + alignment.title + '\"'), seq.id, percent_match, 
+				str(match_length), str(mismatch), str(hsp.gaps), str(hsp.query_start), 
+				query_end, str(hsp.sbjct_start), sbjct_end, str(hsp.expect), 
+				str(hsp.bits), organism, taxonomy, '\n'])
+
+	return output
+
+
+def parse_blast_align (seq, out_path):
 	# import the biopython module to deal with fasta parsing
 	from Bio import SeqIO
 	
-	# a header will be written before the blast results
-	header = 'yes'
+	# get the best blasthit
+	previous, align = 0, get_blast_align(seq)
 
-	# parse the fasta file
-	for seq in SeqIO.parse(seq_path, 'fasta'):
-	
-		previous, blastrun, count = 0, '', 0
-	
-		# Try to get the blast results
-		while blastrun == '':
-			blastrun = blast_sequence(seq)
-			count += 1
-			# stop trying after a 100 timeouts
-			if count % 100 == 0:
-				blastrun = 'error'
-				print('timeout sequence %s' % seq.id)
-		# if a blasthit could be retrieved from the sever
-		if blastrun != 'error' and blastrun.alignments != []:
-			for alignment in blastrun.alignments:
-				for hsp in alignment.hsps:
+	if align != 'error' and align.alignments != []:
+		for alignment in align.alignments:
+			for hsp in alignment.hsps:
 
-					# select the best blast hit			
-					if previous == 0:
-				
-						# get the blast information that is
-						# needed to write to the results
-						match_length = len(hsp.match)
-						mismatch = len(hsp.match.replace('|',''))
-						percent_match = str(100 - ((float(mismatch) / match_length)*100))
-	
-						if list(hsp.frame)[0] == 1: query_end = str(hsp.query_start + match_length)
-						else: query_end = str(hsp.query_start - match_length)
-	
-						if list(hsp.frame)[1] == 1: sbjct_end = str(hsp.sbjct_start + match_length)
-						else: sbjct_end = str(hsp.sbjct_start - match_length)
-	
-						previous = 1
-	
-						# get the taxonomic and species information
-						tax_org = obtain_tax(alignment.title.split('|')[1])
-						taxonomy, organism = tax_org[0], tax_org[1]
+				# select the best blast hit			
+				if previous == 0:
 					
-						# prepare and write the output
-						output = '\t'.join([('\"' + alignment.title + '\"'), seq.id, percent_match, str(match_length), str(mismatch), str(hsp.gaps), str(hsp.query_start), query_end, str(hsp.sbjct_start), sbjct_end, str(hsp.expect), str(hsp.bits), organism, taxonomy, '\n'])
-						writeresult(output, out_path, header)
-						header = 'no'
-
-		# write the 'no blast hit found' message to the output file if no
-		# blast result could be obtained for a fasta sequence
-		else: 
-			writeresult('\t'.join(['no blast hit found', seq.id, '\n']), out_path, header)
+					# write the results to the output file
+					writeresult(get_output(hsp, seq, alignment), out_path)
+					previous = 1
+	# write the 'no blast hit found' message to the output file if no
+	# blast result could be obtained for a fasta sequence
+	else: 
+		print('no hit found for %s' % seq.id)
+		writeresult('\t'.join(['no blast hit found', seq.id, '\n']), out_path)
+		
+	return
+		
+def parse_seq_file (seq_path, threads, out_path):
+	# import the biopython module to deal with fasta parsing
+	# and the multiprocessing module to run multiple blast threads
+	from Bio import SeqIO
+	import multiprocessing
 	
-parse_seq_file(args.i, args.o)
+	# parse the fasta file
+	seq_list = [seq for seq in SeqIO.parse(seq_path, 'fasta')]
+	
+	# blast each sequence in the seq_list list
+	procs = []
+	while len(seq_list) > 0 or len(procs) > 0:
+		# start the maximum number of threads
+		while len(procs) < threads:
+			try:
+				p = multiprocessing.Process(target=parse_blast_align, args=(seq_list.pop(0), out_path,)) 
+				procs.append(p)
+				p.start()
+			except:
+				break
+		# check when a thread is done, remove from the thread list and start
+		# a new thread
+		while len(procs) > 0:
+			for p in procs:
+				if p.is_alive() == False: 
+					p.join()
+					procs.remove(p)
+			break	
+	
+def parse_blast_result (csv_path):
+	# parse the blast results to add headers and normalize the output
+	lines = [line for line in open(csv_path, 'r')]
+	
+	# write the header
+	csvfile = open(csv_path, 'w')
+	csvfile.write('\t'.join(['Blast hit','Sequence','Percentage matched','length match',
+			'mismatches','gaps','query start','query end','subject start',
+			'subject end','e-value','bitscore','species','taxonomy\n']))
+	
+	# add quotes around the blast hit, to simplify the importation of the csv file into spreadsheat programs
+	for line in lines: 
+		csvfile.write(line)
 
+def main ():
+	# check the if the number of threads is larger then 10, if yes set the
+	# maximum number of threads to 10
+	if args.t > 10: parse_seq_file(args.i, 10, args.o)
+	else: parse_seq_file(args.i, args.t, args.o)
+	
+	print('adding header to the csv file')
+	
+	# normalize the output
+	parse_blast_result(args.o)
+	
+	print('done')
+
+if __name__ == "__main__":
+    main()

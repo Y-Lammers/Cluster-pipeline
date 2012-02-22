@@ -153,7 +153,7 @@ def main ():
 	
 	# cluster the fasta file with the desired settings
 	print('Clustering sequence file')
-	time1 = time()
+	time1 = time.time()
 	cluster(fasta_file, args.similarity, args.program, args.cluster, out_dir)
 	cluster_file = out_dir + '.'.join(fasta_file.split('.')[:-1]).split('/')[-1] + '_otus.txt'
 	
@@ -179,3 +179,4 @@ def main ():
 	
 if __name__ == "__main__":
     main()
+    
