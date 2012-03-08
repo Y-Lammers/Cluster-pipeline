@@ -77,6 +77,8 @@ def get_blast_align (seq):
 	return blastrun
 	
 def get_output (hsp, seq, alignment):
+	import time
+	
 	# get the blast information that is
 	# needed to write to the results
 	match_length = len(hsp.match)
@@ -89,8 +91,12 @@ def get_output (hsp, seq, alignment):
 	if list(hsp.frame)[1] == 1: sbjct_end = str(hsp.sbjct_start + match_length)
 	else: sbjct_end = str(hsp.sbjct_start - match_length)
 
-	# get the taxonomic and species information
-	tax_org = obtain_tax(alignment.title.split('|')[1])
+	# Keep trying to get a taxonomic and species information
+	# if there is no result after 5 minutes no taxonomic information will be included
+	tax_org, time1 = ['',''], time.time()
+	while tax_org[0] == '' and time.time()-time1 < 300:
+		tax_org = obtain_tax(alignment.title.split('|')[1])
+
 	taxonomy, organism = tax_org[0], tax_org[1]
 				
 	# prepare the output
