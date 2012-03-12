@@ -66,13 +66,13 @@ def get_blast_align (seq):
 	blastrun, time1 = blast_sequence(seq), time.time()
 
 	# Keep trying to get a result for 5 minutes if no result was obtained
-	while blastrun == '' and time.time()-time1 < 300:
+	while blastrun == '' and time.time()-time1 < 200:
 		align = blast_sequence(seq)
 
 	# return a timeout message if no result could be obtained
 	if blastrun == '':
 		blastrun = 'error'
-		print('timeout sequence %s' % seq.id)		
+		#print('timeout sequence %s' % seq.id)		
 
 	return blastrun
 	
@@ -94,7 +94,7 @@ def get_output (hsp, seq, alignment):
 	# Keep trying to get a taxonomic and species information
 	# if there is no result after 5 minutes no taxonomic information will be included
 	tax_org, time1 = ['',''], time.time()
-	while tax_org[0] == '' and time.time()-time1 < 300:
+	while tax_org[0] == '' and time.time()-time1 < 80:
 		tax_org = obtain_tax(alignment.title.split('|')[1])
 
 	taxonomy, organism = tax_org[0], tax_org[1]
@@ -137,6 +137,7 @@ def parse_seq_file (seq_path, threads, out_path):
 	# and the multiprocessing module to run multiple blast threads
 	from Bio import SeqIO
 	import multiprocessing
+	import time
 	
 	# parse the fasta file
 	seq_list = [seq for seq in SeqIO.parse(seq_path, 'fasta')]
@@ -145,10 +146,10 @@ def parse_seq_file (seq_path, threads, out_path):
 	procs = []
 	while len(seq_list) > 0 or len(procs) > 0:
 		# start the maximum number of threads
-		while len(procs) < threads:
+		while len(procs) < threads and len(seq_list) > 0:
 			try:
 				p = multiprocessing.Process(target=parse_blast_align, args=(seq_list.pop(0), out_path,)) 
-				procs.append(p)
+				procs.append([p, time.time()])
 				p.start()
 			except:
 				break
@@ -156,8 +157,11 @@ def parse_seq_file (seq_path, threads, out_path):
 		# a new thread
 		while len(procs) > 0:
 			for p in procs:
-				if p.is_alive() == False: 
-					p.join()
+				if p[0].is_alive() == False: 
+					p[0].join()
+					procs.remove(p)
+				elif time.time() - p[1] > 300:
+					p[0].terminate()
 					procs.remove(p)
 			break	
 	

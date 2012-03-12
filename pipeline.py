@@ -15,6 +15,12 @@ parser.add_argument('--out_dir', metavar='output directory', type=str,
 			help='Enter the output directory (full path)')
 parser.add_argument('--pipeline', metavar='pipeline', type=str, 
 			help='The way the 454 reads will be processed (only relevant if multiple input files are used): combine (input files are combined in a single file) / cluster (input files are tagged and clustered together, bassed on tags the origin of reads in clusters can be traced) / test (run the cluster step and write the cluster info to a output file) (default: combine)', default='combine')
+parser.add_argument('--trim', metavar='trim input sequences', type=str, 
+			help='Trim the input sequences yes / no (default: no)', default='no')
+parser.add_argument('--trim_ref', metavar='reference based trimming', type=str, 
+			help='Enter the reference file for the sequence trimming (by default no reference is used)', default='')
+parser.add_argument('--save_no_match', metavar='save unligned seqs', type=str, 
+			help='Save the sequences that cannot be aligned yes / no (default: yes)', default='yes')
 parser.add_argument('--program', metavar='cluster program', type=str, 
 			help='The cluster program that will be used to cluster the 454 reads: uclust / cdhit (default: uclust)', default='uclust')
 parser.add_argument('--similarity', metavar='sequene similarity for clustering', type=str, 
@@ -71,7 +77,21 @@ def combine (fasta_files, file_name, out_dir):
 	#p = call(['cat'] + fasta_files + [('>' + out_dir + 'combined_fasta_file.fasta')])
 	p = call(command, shell=True)
 
-	return (out_dir + file_name)	
+	return (out_dir + file_name)
+	
+def trim (pipe_path, fasta_file, reference_file, save, out_dir):
+	from subprocess import call
+	
+	out_file = out_dir + 'trimmed_sequences.fasta'
+	
+	# run the trim_sequence.py script, check if a reference file is used, further settings for the
+	# trim_sequence.py script are left at default values since these have no impact on trimming performance
+	if reference_file != '':
+		p = call(['python', (pipe_path + 'trim_sequences.py'), '-i', fasta_file, '-o', out_file, '-s', save])
+	else:
+		p = call(['python', (pipe_path + 'trim_sequences.py'), '-i', fasta_file, '-o', out_file, '-r', reference_file, '-s', save])
+
+	return out_file
 
 def cluster (fasta_file, similarity, program, out_dir):
 	from subprocess import call
@@ -151,6 +171,10 @@ def main ():
 		fasta_file = combine(taged_files, 'combined_fasta_file.fasta', out_dir)
 	else:
 		fasta_file = args.input_file[0]
+	
+	# trim sequences if option is selected
+	if args.trim != 'no':
+		fasta_file = trim(fasta_file, args.trim_ref, args.save_no_match)
 	
 	# cluster the fasta file with the desired settings
 	print('Clustering sequence file')
