@@ -183,10 +183,10 @@ def trim_sequence (sequence_list, markers, save, output_path):
 		else:
 			marker_pos.append(str(sequence_list[0]).find(marker))
 
-	if marker_pos[0] < marker_pos[1] and marker_pos[1] < len(sequence_list[0]):
+	if marker_pos[0] < marker_pos[1] and len(sequence_list[0][marker_pos[0]:marker_pos[1]]) > 10:
 		write_results(sequence_list[0][marker_pos[0]:marker_pos[1]], sequence_list[1], output_path)
 	else:
-		if save == 'yes':
+		if save == 'yes' and len(sequence_list[0]) > 10:
 			write_results(sequence_list[0], sequence_list[1], output_path)
 
 	return

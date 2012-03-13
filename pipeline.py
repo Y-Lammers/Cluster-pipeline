@@ -87,9 +87,9 @@ def trim (pipe_path, fasta_file, reference_file, save, out_dir):
 	# run the trim_sequence.py script, check if a reference file is used, further settings for the
 	# trim_sequence.py script are left at default values since these have no impact on trimming performance
 	if reference_file != '':
-		p = call(['python', (pipe_path + 'trim_sequences.py'), '-i', fasta_file, '-o', out_file, '-s', save])
+		p = call(['python', (pipe_path + 'trim_sequence.py'), '-i', fasta_file, '-o', out_file, '-s', save])
 	else:
-		p = call(['python', (pipe_path + 'trim_sequences.py'), '-i', fasta_file, '-o', out_file, '-r', reference_file, '-s', save])
+		p = call(['python', (pipe_path + 'trim_sequence.py'), '-i', fasta_file, '-o', out_file, '-r', reference_file, '-s', save])
 
 	return out_file
 
@@ -174,7 +174,7 @@ def main ():
 	
 	# trim sequences if option is selected
 	if args.trim != 'no':
-		fasta_file = trim(fasta_file, args.trim_ref, args.save_no_match)
+		fasta_file = trim(pipe_path, fasta_file, args.trim_ref, args.save_no_match, out_dir)
 	
 	# cluster the fasta file with the desired settings
 	print('Clustering sequence file')
