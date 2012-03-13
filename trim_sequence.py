@@ -133,15 +133,16 @@ def get_marker_seq (sequence_dic, reference, samples):
 		run_alignment(file_name + '.fasta')
 		
 		# obtain the largest fragment
-		sequence = get_fragment((file_name + '_aligned.txt'))
+		fragment = get_fragment((file_name + '_aligned.txt'))
 		
 		# get the first and last 10 bases from the fragment and store these
 		# in the marker_dic, count the frequency if they appear more than once
-		marker = '-'.join([sequence[:10],sequence[-10:]])
-		if marker not in marker_dic:
-			marker_dic[marker] = 1
-		else:
-			marker_dic[marker] += 1
+		marker = '-'.join([fragment[:10],fragment[-10:]])
+		if len(fragment) >= len(sequence)/1.33 and len(marker) == 21:
+			if marker not in marker_dic:
+				marker_dic[marker] = 1
+			elif marker in marker_dic:
+				marker_dic[marker] += 1
 
 	# get the most abundant marker from the marker_dic and return this value
 	marker_list = [[marker_dic[marker], marker] for marker in marker_dic]
@@ -219,11 +220,11 @@ def trim_sequences_process (sequence_dic, marker, threads, save, output_path):
 def main ():
 	# get the sequence dictionary and obtain the marker
 	sequence_dic = extract_seq(args.i)
+
 	if args.r != 'no': 
 		reference = extract_seq(args.r)
 	else:
 		reference = 'no'
-
 	marker = get_marker_seq(sequence_dic, reference, args.n)
 	
 	# trim the sequences

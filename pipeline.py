@@ -18,7 +18,7 @@ parser.add_argument('--pipeline', metavar='pipeline', type=str,
 parser.add_argument('--trim', metavar='trim input sequences', type=str, 
 			help='Trim the input sequences yes / no (default: no)', default='no')
 parser.add_argument('--trim_ref', metavar='reference based trimming', type=str, 
-			help='Enter the reference file for the sequence trimming (by default no reference is used)', default='')
+			help='Enter the reference file for the sequence trimming (by default no reference is used)', default='no')
 parser.add_argument('--save_no_match', metavar='save unligned seqs', type=str, 
 			help='Save the sequences that cannot be aligned yes / no (default: yes)', default='yes')
 parser.add_argument('--program', metavar='cluster program', type=str, 
@@ -84,12 +84,8 @@ def trim (pipe_path, fasta_file, reference_file, save, out_dir):
 	
 	out_file = out_dir + 'trimmed_sequences.fasta'
 	
-	# run the trim_sequence.py script, check if a reference file is used, further settings for the
-	# trim_sequence.py script are left at default values since these have no impact on trimming performance
-	if reference_file != '':
-		p = call(['python', (pipe_path + 'trim_sequence.py'), '-i', fasta_file, '-o', out_file, '-s', save])
-	else:
-		p = call(['python', (pipe_path + 'trim_sequence.py'), '-i', fasta_file, '-o', out_file, '-r', reference_file, '-s', save])
+	# run the trim_sequence.py script
+	p = call(['python', (pipe_path + 'trim_sequence.py'), '-i', fasta_file, '-o', out_file, '-r', reference_file, '-s', save])
 
 	return out_file
 
@@ -174,6 +170,7 @@ def main ():
 	
 	# trim sequences if option is selected
 	if args.trim != 'no':
+		print('Trimming sequences')
 		fasta_file = trim(pipe_path, fasta_file, args.trim_ref, args.save_no_match, out_dir)
 	
 	# cluster the fasta file with the desired settings
