@@ -67,5 +67,11 @@ def otu_freq_dist (otufile, tag_list, blast_dic, min_size, out_path):
 			write_result(tag_dic, tag_list, cluster, header, blast, out_path)
 			header = 'no'
 
-otu_freq_dist(args.cluster_file, get_tag(args.tag_file), get_blast(args.blast), args.min_size, args.output_file)
+def main ():
+	# run the comparison between input files
+	otu_freq_dist(args.cluster_file, get_tag(args.tag_file), get_blast(args.blast), args.min_size, args.output_file)
+
+	
+if __name__ == "__main__":
+    main()
 

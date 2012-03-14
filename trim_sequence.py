@@ -60,9 +60,12 @@ def write_results (sequence, header, out_path):
 	from Bio.SeqRecord import SeqRecord	
 
 	# write a fasta sequence to the output file
-	out_file = open(out_path, 'a')
-	SeqIO.write(SeqRecord(sequence, id=header, description=''), out_file, 'fasta')
-	out_file.close()
+	try:
+		out_file = open(out_path, 'a')
+		SeqIO.write(SeqRecord(sequence, id=header, description=''), out_file, 'fasta')
+		out_file.close()
+	except:
+		pass
 
 def run_alignment (fasta_path):
 	# import the module to start other programs

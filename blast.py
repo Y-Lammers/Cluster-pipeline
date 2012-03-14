@@ -100,7 +100,7 @@ def get_output (hsp, seq, alignment):
 	taxonomy, organism = tax_org[0], tax_org[1]
 				
 	# prepare the output
-	output = '\t'.join([('\"' + alignment.title + '\"'), seq.id, percent_match, 
+	output = '\t'.join([seq.id, ('\"' + alignment.title + '\"'), percent_match, 
 				str(match_length), str(mismatch), str(hsp.gaps), str(hsp.query_start), 
 				query_end, str(hsp.sbjct_start), sbjct_end, str(hsp.expect), 
 				str(hsp.bits), organism, taxonomy, '\n'])
