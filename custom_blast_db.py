@@ -17,8 +17,8 @@ parser.add_argument('-o', metavar='output file', type=str,
 			help='enter the output file')
 parser.add_argument('-r', metavar='reference file', type=str, 
 			help='enter the reference file on wich the blast database will be based')
-parser.add_argument('-b', metavar='blast headers', type=str, 
-			help='does the reference file contain blast headers (indicated by |\'s in the name) yes / no (default" no)', default='no')			
+parser.add_argument('-b', metavar='UNITE db', type=str, 
+			help='UNITE databased used as reference (\'yes\' includes the taxonomic and accession numbers) yes / no (default" no)', default='no')			
 args = parser.parse_args()
 
 def paths():
@@ -40,6 +40,8 @@ def make_db (ref_fasta_file, ncbi_path):
 	# import module that allows the makeblastdb program to be run
 	from subprocess import call
 	
+	print(ref_fasta_file)
+	
 	#make a reference database with the makeblastdb tool
 	p = call([(ncbi_path + 'makeblastdb'), '-in', ref_fasta_file, 
 			'-dbtype', 'nucl', '-parse_seqids', '-hash_index', '-max_file_sz', '5GB'])
@@ -59,58 +61,73 @@ def clean_up (db_name):
 	from subprocess import call
 
 	#clean up database files with the 'rm' command
-	cmd = 'rm ' + db_name + '.*'	
+	cmd = 'rm ' + db_name + '*'	
 	p = call(cmd, shell = True)
 
-def parse_blast_result (csv_path):
+def parse_blast_result (csv_path, UNITE):
 	# parse the blast results to add headers and normalize the output so it is
 	# similar to the blast.py output.
 	lines = [line for line in open(csv_path, 'r')]
 	
 	# write the header
 	csvfile = open(csv_path, 'w')
-	csvfile.write('\t'.join(['Query','Sequence','Percentage matched','length match','mismatches','gaps','query start','query end','subject start','subject end','e-value','bitscore\n']))
+	if UNITE != 'no':
+		csvfile.write('\t'.join(['Query','Sequence','Percentage matched','length match','mismatches','gaps','query start','query end','subject start','subject end','e-value','bitscore','accession', 'genus', 'species', 'taxonomy\n']))
+	else:
+		csvfile.write('\t'.join(['Query','Sequence','Percentage matched','length match','mismatches','gaps','query start','query end','subject start','subject end','e-value','bitscore\n']))
 	
 	# add quotes around the blast hit, to simplify the importation of the csv file into spreadsheat programs
 	for line in lines:
 		line = line.split(',')
-		info = '\t'.join(line[-11:])
-		blast = '\"' + '\t'.join(line[:-(len(line)-1)]) + '\"'
-		csvfile.write(blast + '\t' + info)
+		line[-10] = line[-10].replace('.', ',')
+		info = '\t'.join(line[-11:]).replace('\n', '')
+		blast = ','.join(line[:-(len(line)-1)])
+		if UNITE != 'no':
+			header = line[-11].split('_')
+			tax = '\t'.join([header[0][1:], header[1].split('-')[0], header[1].split('-')[1], header[2].replace('-', ' ')])
+			csvfile.write(blast + '\t' + info + '\t' + tax + '\n')
+		else:
+			csvfile.write(blast + '\t' + info + '\n')
 		
 def scan_fasta_file (fasta_path):
 	# import modules for fasta sequence handling
 	from Bio import SeqIO
 	from Bio.SeqRecord import SeqRecord
+	import random, string
 
 	# read the fasta sequences
 	seq_list = [seq for seq in SeqIO.parse(fasta_path, 'fasta')]
-
+	out_path = '.'.join(fasta_path.split('.')[:-1]) + '_unite.fasta'
 	
-	out_file = open(fasta_path, 'w')
+	out_file = open(out_path, 'w')
 
 	# replace the '|' signs that cause blastmakedb to crash, overwrite the old file
-	for seq in seq_list:
-		SeqIO.write(SeqRecord(seq.seq, id=seq.id.replace('|',''), description=''), out_file, 'fasta')
+	for seq in seq_list[:100]:
+		header = seq.description.replace('|-|-|', '_').replace('|', '_').replace(' ', '-')
+		SeqIO.write(SeqRecord(seq.seq, id=header, description=''), out_file, 'fasta')
 
 	out_file.close()
+	
+	return out_path
 
 def main ():
 	# make the blast database
-	if args.b == 'no':
-		make_db(args.r, paths()[1])
-	else:
-		scan_fasta_file(args.r)
-		make_db(args.r, paths()[1])
-		
+	ref_path = args.r
+
+	if args.b != 'no':
+		ref_path = scan_fasta_file(args.r)
+	
+	make_db(ref_path, paths()[1])
+	
+	
 	# blast the fasta file against the newly created database
-	run_db(args.i, paths()[1], args.r, args.o)
+	run_db(args.i, paths()[1], ref_path, args.o)
 
 	# remove database files
-	clean_up(args.r)
+	clean_up(ref_path)
 	
 	# process output
-	parse_blast_result(args.o)	
+	parse_blast_result(args.o, args.b)	
 
 		
 if __name__ == "__main__":

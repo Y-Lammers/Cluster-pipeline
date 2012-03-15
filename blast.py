@@ -98,12 +98,13 @@ def get_output (hsp, seq, alignment):
 		tax_org = obtain_tax(alignment.title.split('|')[1])
 
 	taxonomy, organism = tax_org[0], tax_org[1]
-				
+					
 	# prepare the output
 	output = '\t'.join([seq.id, ('\"' + alignment.title + '\"'), percent_match, 
 				str(match_length), str(mismatch), str(hsp.gaps), str(hsp.query_start), 
 				query_end, str(hsp.sbjct_start), sbjct_end, str(hsp.expect), 
-				str(hsp.bits), organism, taxonomy, '\n'])
+				str(hsp.bits), alignment.title.split('|')[3], organism.split(' ')[0], 
+				organism.split(' ')[1], taxonomy, '\n'])
 
 	return output
 
@@ -173,7 +174,7 @@ def parse_blast_result (csv_path):
 	csvfile = open(csv_path, 'w')
 	csvfile.write('\t'.join(['Query','Sequence','Percentage matched','length match',
 			'mismatches','gaps','query start','query end','subject start',
-			'subject end','e-value','bitscore','species','taxonomy\n']))
+			'subject end','e-value','bitscore','accession','genus','species','taxonomy\n']))
 	
 	# add quotes around the blast hit, to simplify the importation of the csv file into spreadsheat programs
 	for line in lines: 
