@@ -17,8 +17,10 @@ parser.add_argument('-o', metavar='output file', type=str,
 			help='enter the output file')
 parser.add_argument('-r', metavar='reference file', type=str, 
 			help='enter the reference file on wich the blast database will be based')
-parser.add_argument('-b', metavar='UNITE db', type=str, 
+parser.add_argument('-u', metavar='UNITE db', type=str, 
 			help='UNITE databased used as reference (\'yes\' includes the taxonomic and accession numbers) yes / no (default" no)', default='no')			
+parser.add_argument('-a', metavar='accession codes', type=str,
+			help='Does the fasta reference contain accession codes in the header (indicated by \'|\'s) yes / no (default no)', default='no')
 args = parser.parse_args()
 
 def paths():
@@ -39,8 +41,6 @@ def paths():
 def make_db (ref_fasta_file, ncbi_path):
 	# import module that allows the makeblastdb program to be run
 	from subprocess import call
-	
-	print(ref_fasta_file)
 	
 	#make a reference database with the makeblastdb tool
 	p = call([(ncbi_path + 'makeblastdb'), '-in', ref_fasta_file, 
@@ -84,7 +84,13 @@ def parse_blast_result (csv_path, UNITE):
 		blast = ','.join(line[:-(len(line)-1)])
 		if UNITE != 'no':
 			header = line[-11].split('_')
-			tax = '\t'.join([header[0][1:], header[1].split('-')[0], header[1].split('-')[1], header[2].replace('-', ' ')])
+			try:
+				if 'uncultured' in header[1]:
+					tax = '\t'.join([header[0], header[1].split('-')[1], header[1].split('-')[0], header[-1].replace('-', ' ')])
+				else:
+					tax = '\t'.join([header[0], header[1].split('-')[0], header[1].split('-')[1], header[-1].replace('-', ' ')])
+			except:
+				tax = '\t'.join(['','','',''])
 			csvfile.write(blast + '\t' + info + '\t' + tax + '\n')
 		else:
 			csvfile.write(blast + '\t' + info + '\n')
@@ -97,14 +103,24 @@ def scan_fasta_file (fasta_path):
 
 	# read the fasta sequences
 	seq_list = [seq for seq in SeqIO.parse(fasta_path, 'fasta')]
-	out_path = '.'.join(fasta_path.split('.')[:-1]) + '_unite.fasta'
+	out_path = '.'.join(fasta_path.split('.')[:-1]) + '_normalized.fasta'
 	
 	out_file = open(out_path, 'w')
 
 	# replace the '|' signs that cause blastmakedb to crash, overwrite the old file
-	for seq in seq_list[:100]:
-		header = seq.description.replace('|-|-|', '_').replace('|', '_').replace(' ', '-')
-		SeqIO.write(SeqRecord(seq.seq, id=header, description=''), out_file, 'fasta')
+	for seq in seq_list:
+		header = seq.description.split('|')
+		try:
+			while '' or '-' in header:
+				if '' in header: header.remove('')
+				if '-' in header: header.remove('-')
+			if ' ' in header[1]: header[1] = header[1].replace(' ','-')
+			else: header[1] += '-species'
+			if len(header) == 2: header.append('no-taxonomy')
+			else: header[2] = header[2].replace(' ','-')
+		except:
+			pass
+		SeqIO.write(SeqRecord(seq.seq, id='_'.join(header), description=''), out_file, 'fasta')
 
 	out_file.close()
 	
@@ -114,11 +130,11 @@ def main ():
 	# make the blast database
 	ref_path = args.r
 
-	if args.b != 'no':
+	if args.u != 'no' or args.a != 'no':
 		ref_path = scan_fasta_file(args.r)
 	
 	make_db(ref_path, paths()[1])
-	
+
 	
 	# blast the fasta file against the newly created database
 	run_db(args.i, paths()[1], ref_path, args.o)

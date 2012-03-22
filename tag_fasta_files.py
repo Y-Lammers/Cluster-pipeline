@@ -67,7 +67,11 @@ def retrieve_fasta_files (fasta_file_list, out_dir):
 		tag_file.write(fasta_path + '\t' + output_path + '\t' + tag + '\n')
 		tag_file.close()
 
-retrieve_fasta_files(args.i, args.o)
-
-
+def main ():
+	
+	# go through the sequence file list, and retag each sequence
+	retrieve_fasta_files(args.i, args.o) 
+	
+if __name__ == "__main__":
+    main()
 

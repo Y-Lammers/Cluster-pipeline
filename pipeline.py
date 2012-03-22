@@ -29,8 +29,10 @@ parser.add_argument('--blast', metavar='blast method', type=str,
 			help='The blast method used for identifying the reads: genbank / Local (default: genbank', default='genbank')
 parser.add_argument('--reference', metavar='reference files', type=str, 
 			help='Reference file(s) used for the local blast search', nargs='+')
-parser.add_argument('--blast_header', metavar='blast fasta headers', type=str, 
-			help='does the reference fasta file contain blast headers (indicated by |\'s in the name) yes / no (default" no)', default='no')			
+parser.add_argument('--accession', metavar='genbank accession', type=str, 
+			help='Does the reference file contain accession codes in the fasta header (indicated by the |\'s) yes / no (default" no)', default='no')			
+parser.add_argument('--unite', metavar='unite reference', type=str, 
+			help='Is the unite reference database used yes / no (if yes this sets the accession parameter automatically to \'yes\')', default='no')			
 parser.add_argument('--pick_rep', metavar='otu sequence picking', type=str, 
 			help='Method how the OTU representative sequence will be picked: random / consensus / combined (default: random)', default='random')
 parser.add_argument('--min_size', metavar='minimum OTU size', type=int, 
@@ -127,12 +129,12 @@ def genbank_blast (pipe_path, fasta_file, out_dir):
 		
 	return output_file
 
-def local_blast (pipe_path, fasta_file, reference, blast_header, out_dir):
+def local_blast (pipe_path, fasta_file, reference, accession, unite, out_dir):
 	from subprocess import call
 	
 	# blast the sequences against a local blast database with the custom_blast_db.py script
 	output_file = out_dir + 'blast_result.csv'
-	p = call(['python', (pipe_path + 'custom_blast_db.py'), '-i', fasta_file, '-o', output_file, '-r', reference, '-b', blast_header])
+	p = call(['python', (pipe_path + 'custom_blast_db.py'), '-i', fasta_file, '-o', output_file, '-r', reference, '-a', accession, '-u', unite])
 
 	return output_file
 
@@ -201,11 +203,13 @@ def main ():
 		else:
 			reference = args.reference[0]
 		
-		iden_file = local_blast(pipe_path, rep_seq, reference, args.blast_header, out_dir)
+		iden_file = local_blast(pipe_path, rep_seq, reference, args.accession, args.unite, out_dir)
 	
 	# combine cluster and identification files (only when multiple fasta files are used
 	# and the --pipeline parameter is set to cluster
-	if args.pipeline == 'cluster': compare_cluster(pipe_path, cluster_file, iden_file, (out_dir + 'tag_file.txt'), args.min_size, out_dir)
+	if args.pipeline == 'cluster': 
+		print('Check the origin of the sequences in the clusters')
+		compare_cluster(pipe_path, cluster_file, iden_file, (out_dir + 'tag_file.txt'), args.min_size, out_dir)
 	
 if __name__ == "__main__":
     main()
