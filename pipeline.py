@@ -138,14 +138,14 @@ def local_blast (pipe_path, fasta_file, reference, accession, unite, out_dir):
 
 	return output_file
 
-def compare_cluster (pipe_path, cluster_file, blast_file, tag_file, min_size, out_dir):
+def compare_cluster (pipe_path, cluster_file, blast_file, tag_file, min_size, pipeline, rep_seq, out_dir):
 	from subprocess import call
 
 	# when multiple fasta files where clusted, see where the sequences in a cluster come from
 	# this is done with the cluster_freq.py script
 	output_file = out_dir + 'cluster_input_seqs.csv'
-	p = call(['python', (pipe_path + 'cluster_freq.py'), '--cluster_file', cluster_file, '--output_file', output_file,
-			'--tag_file', tag_file, '--blast', blast_file, '--min_size', str(min_size)])	
+	p = call(['python', (pipe_path + 'cluster_freq.py'), '-c', cluster_file, '-o', output_file,
+			'-t', tag_file, '-b', blast_file, '-s', str(min_size), '-m', pipeline, '-f', rep_seq])	
 
 	return output_file
 
@@ -162,7 +162,7 @@ def main ():
 	check_dir(out_dir)
 		
 	# check if there are multiple files that might need tagging
-	if len(args.input_file) > 1:
+	if len(args.input_file) > 1 or args.pipeline == 'cluster' or args.pipeline == 'merge':
 		print('Tagging input files')
 		taged_files = tag(pipe_path, args.input_file, out_dir)
 		print('Merging tagged files')
@@ -207,9 +207,9 @@ def main ():
 	
 	# combine cluster and identification files (only when multiple fasta files are used
 	# and the --pipeline parameter is set to cluster
-	if args.pipeline == 'cluster': 
+	if args.pipeline == 'cluster' or 'merge': 
 		print('Check the origin of the sequences in the clusters')
-		compare_cluster(pipe_path, cluster_file, iden_file, (out_dir + 'tag_file.txt'), args.min_size, out_dir)
+		compare_cluster(pipe_path, cluster_file, iden_file, (out_dir + 'tag_file.txt'), args.min_size, args.pipeline, rep_seq, out_dir)
 	
 if __name__ == "__main__":
     main()

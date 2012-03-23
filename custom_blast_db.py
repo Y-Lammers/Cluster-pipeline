@@ -143,7 +143,7 @@ def main ():
 	clean_up(ref_path)
 	
 	# process output
-	parse_blast_result(args.o, args.b)	
+	parse_blast_result(args.o, args.u)	
 
 		
 if __name__ == "__main__":
