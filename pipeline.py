@@ -15,6 +15,12 @@ parser.add_argument('--out_dir', metavar='output directory', type=str,
 			help='Enter the output directory (full path)')
 parser.add_argument('--pipeline', metavar='pipeline', type=str, 
 			help='The way the 454 reads will be processed (only relevant if multiple input files are used): combine (input files are combined in a single file) / cluster (input files are tagged and clustered together, bassed on tags the origin of reads in clusters can be traced) / test (run the cluster step and write the cluster info to a output file) (default: combine)', default='combine')
+parser.add_argument('--filter', metavar='filter sequences', type=str,
+			help='Filter the sequences based on length or duplicates (yes / no) default: no', default='no')
+parser.add_argument('--length', metavar='minimum length', type=int,
+			help='Filter out sequences smaller then the minimum length', default=0)
+parser.add_argument('--duplicate', metavar='remove duplicates', type=str,
+			help='Remove duplicate sequences from the dataset (yes / no) default: no', default='no')
 parser.add_argument('--trim', metavar='trim input sequences', type=str, 
 			help='Trim the input sequences yes / no (default: no)', default='no')
 parser.add_argument('--trim_ref', metavar='reference based trimming', type=str, 
@@ -61,6 +67,15 @@ def check_dir (out_dir):
 		os.stat(out_dir)
 	except:
 		os.mkdir(out_dir)
+
+def filter_seq (pipe_path, fasta_files, length, duplicate, out_dir):
+	from subprocess import Popen, PIPE	
+
+	# tag the input files
+	filt = Popen(['python', (pipe_path + 'filter.py'), '-i'] + fasta_files + ['-o', out_dir, '-d', duplicate, '-m', str(length)], stdout=PIPE)
+	filter_files = filt.communicate()[0].split('\n')[:-1]
+
+	return filter_files
 
 def tag (pipe_path, fasta_files, out_dir):
 	from subprocess import Popen, PIPE	
@@ -160,15 +175,22 @@ def main ():
 	if args.out_dir[-1] != '/': out_dir = args.out_dir + '/'
 	else: out_dir = args.out_dir
 	check_dir(out_dir)
+	
+	input_files = args.input_file
+	
+	# check if the inputfiles need filtering
+	if args.filter == 'yes':
+		temp = filter_seq(pipe_path, input_files, args.length, args.duplicate, out_dir)
+		input_files = temp
 		
 	# check if there are multiple files that might need tagging
-	if len(args.input_file) > 1 or args.pipeline == 'cluster' or args.pipeline == 'merge':
+	if len(input_files) > 1 or args.pipeline == 'cluster' or args.pipeline == 'merge':
 		print('Tagging input files')
-		taged_files = tag(pipe_path, args.input_file, out_dir)
+		taged_files = tag(pipe_path, input_files, out_dir)
 		print('Merging tagged files')
 		fasta_file = combine(taged_files, 'combined_fasta_file.fasta', out_dir)
 	else:
-		fasta_file = args.input_file[0]
+		fasta_file = input_files[0]
 	
 	# trim sequences if option is selected
 	if args.trim != 'no':

@@ -93,19 +93,30 @@ def get_output (hsp, seq, alignment):
 
 	# Keep trying to get a taxonomic and species information
 	# if there is no result after 5 minutes no taxonomic information will be included
-	tax_org, time1 = ['no_taxonomy_found','no_genus no_species'], time.time()
+	tax_org, time1 = ['',''], time.time()
 	while tax_org[0] == '' and time.time()-time1 < 80:
 		tax_org = obtain_tax(alignment.title.split('|')[1])
 
 	taxonomy, organism = tax_org[0], tax_org[1]
 					
 	# prepare the output
-	output = '\t'.join([seq.id, ('\"' + alignment.title + '\"'), percent_match, 
+	try:
+		bla = organism.split(' ')[1]
+	except:
+		print(organism)
+
+	try:
+		output = '\t'.join([seq.id, ('\"' + alignment.title + '\"'), percent_match, 
 			str(match_length), str(mismatch), str(hsp.gaps), str(hsp.query_start), 
 			query_end, str(hsp.sbjct_start), sbjct_end, str(hsp.expect), 
 			str(hsp.bits), alignment.title.split('|')[3], organism.split(' ')[0], 
 			organism.split(' ')[1], taxonomy, '\n'])
-	
+	except:
+		output = '\t'.join([seq.id, ('\"' + alignment.title + '\"'), percent_match, 
+			str(match_length), str(mismatch), str(hsp.gaps), str(hsp.query_start), 
+			query_end, str(hsp.sbjct_start), sbjct_end, str(hsp.expect), 
+			str(hsp.bits), alignment.title.split('|')[3],'','','','\n'])
+
 	return output
 
 
@@ -129,7 +140,7 @@ def parse_blast_align (seq, out_path):
 	# write the 'no blast hit found' message to the output file if no
 	# blast result could be obtained for a fasta sequence
 	else: 
-		writeresult('\t'.join([seq.id, 'no blast hit found', '\n']), out_path)
+		writeresult('\t'.join(['no blast hit found', seq.id, '\n']), out_path)
 		
 	return
 		

@@ -54,7 +54,7 @@ def retrieve_fasta_files (fasta_file_list, out_dir):
 		for seq in SeqIO.parse(fasta_path, 'fasta'):
 			# for each sequence the tag is added to the sequence header (seq.id)
 			new_seq = SeqRecord(seq.seq, id=(tag + '_' + seq.id), description='')
-			
+				
 			# the resulting sequence is written to the output file
 			output_file = open(output_path, 'a')
 			SeqIO.write(new_seq, output_file, 'fasta')
@@ -70,7 +70,7 @@ def retrieve_fasta_files (fasta_file_list, out_dir):
 def main ():
 	
 	# go through the sequence file list, and retag each sequence
-	retrieve_fasta_files(args.i, args.o) 
+	retrieve_fasta_files(args.i, args.o)
 	
 if __name__ == "__main__":
     main()

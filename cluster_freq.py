@@ -37,7 +37,10 @@ def get_blast (blast_file):
 			line = line.replace('\"','').replace('\n','').split('\t')
 			for i in range(0, len(line)):
 				if '_cluster_' in line[i]:
-					blast_dic[line[i+1]] = line[i:(i+4)]+line[12:16]
+					if len(line) > 16:
+						blast_dic[line[i+1]] = line[i:(i+4)]+line[12:16]
+					else:
+						blast_dic[line[i+1]] = line[i:(i+4)]+['','','','']
 					seq_dic[line[i].split('_cluster_')[0]] = line[i+1]
 
 	return [blast_dic, seq_dic]

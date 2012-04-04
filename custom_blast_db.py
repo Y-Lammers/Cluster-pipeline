@@ -56,12 +56,15 @@ def run_db (sequence_fasta_file, ncbi_path, db_name, outfile):
 			db_name, '-out', outfile, '-evalue', '10', '-outfmt', '10',
 			'-max_target_seqs', '1'])
 	
-def clean_up (db_name):
+def clean_up (db_name, u, a):
 	# import module that can run bash commands
 	from subprocess import call
 
 	#clean up database files with the 'rm' command
-	cmd = 'rm ' + db_name + '*'	
+	if u != 'no' or a != 'no':
+		cmd = 'rm ' + db_name + '*'	
+	else:
+		cmd = 'rm ' + db_name + '.*'
 	p = call(cmd, shell = True)
 
 def parse_blast_result (csv_path, UNITE):
@@ -140,7 +143,7 @@ def main ():
 	run_db(args.i, paths()[1], ref_path, args.o)
 
 	# remove database files
-	clean_up(ref_path)
+	clean_up(ref_path, args.u, args.a)
 	
 	# process output
 	parse_blast_result(args.o, args.u)	
