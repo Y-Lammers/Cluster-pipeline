@@ -159,6 +159,9 @@ def compare_cluster (pipe_path, cluster_file, blast_file, tag_file, min_size, pi
 	# when multiple fasta files where clusted, see where the sequences in a cluster come from
 	# this is done with the cluster_freq.py script
 	output_file = out_dir + 'cluster_input_seqs.csv'
+	
+	if pipeline == 'merge': pipeline = 'yes'
+	
 	p = call(['python', (pipe_path + 'cluster_freq.py'), '-c', cluster_file, '-o', output_file,
 			'-t', tag_file, '-b', blast_file, '-s', str(min_size), '-m', pipeline, '-f', rep_seq])	
 

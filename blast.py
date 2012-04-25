@@ -101,11 +101,6 @@ def get_output (hsp, seq, alignment):
 					
 	# prepare the output
 	try:
-		bla = organism.split(' ')[1]
-	except:
-		print(organism)
-
-	try:
 		output = '\t'.join([seq.id, ('\"' + alignment.title + '\"'), percent_match, 
 			str(match_length), str(mismatch), str(hsp.gaps), str(hsp.query_start), 
 			query_end, str(hsp.sbjct_start), sbjct_end, str(hsp.expect), 
@@ -140,7 +135,7 @@ def parse_blast_align (seq, out_path):
 	# write the 'no blast hit found' message to the output file if no
 	# blast result could be obtained for a fasta sequence
 	else: 
-		writeresult('\t'.join(['no blast hit found', seq.id, '\n']), out_path)
+		writeresult('\t'.join([seq.id, 'no blast hit found','\n']), out_path)
 		
 	return
 		

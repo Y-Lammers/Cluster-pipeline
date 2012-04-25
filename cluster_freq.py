@@ -37,7 +37,7 @@ def get_blast (blast_file):
 			line = line.replace('\"','').replace('\n','').split('\t')
 			for i in range(0, len(line)):
 				if '_cluster_' in line[i]:
-					if len(line) > 16:
+					if len(line) > 15:
 						blast_dic[line[i+1]] = line[i:(i+4)]+line[12:16]
 					else:
 						blast_dic[line[i+1]] = line[i:(i+4)]+['','','','']
@@ -82,7 +82,7 @@ def combine (otu_list, seq_dic, cluster_dic, merge):
 				cluster = [cluster_dic[seq]]
 		# if the merge paramter is set to 'merge', the otu information will be
 		# merged with other otus that share the same blast information
-		if merge == 'merge':
+		if merge == 'yes':
 			try:
 				combine_dic[blast][0] += otu
 				combine_dic[blast][1] += cluster
