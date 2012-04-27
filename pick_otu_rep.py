@@ -71,12 +71,11 @@ def write_results (sequence, header, cluster, clust_length, out_path):
 	out_file.close()
 
 def find_muscle_path ():
-	from subprocess import Popen, PIPE	
-	
-	# uses the linux 'find' command to locate the muscle file
-	muscle_path = Popen(['find', '/home' ,'-name', 'muscle*'], stdout=PIPE)
-	
-	return muscle_path.communicate()[0].replace('\n', '')
+	# find the path to the muscle program
+	path_file = open('/'.join(sys.argv[0].split('/')[:-1])+'/paths.txt', 'r')
+	muscle_path = [line.split('\t')[1] for line in path_file if 'muscle' in line]
+		
+	return muscle_path
 
 def clean_up (file_path):
 	from subprocess import call

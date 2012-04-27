@@ -135,7 +135,7 @@ def parse_blast_align (seq, out_path):
 	# write the 'no blast hit found' message to the output file if no
 	# blast result could be obtained for a fasta sequence
 	else: 
-		writeresult('\t'.join([seq.id, 'no blast hit found','\n']), out_path)
+		writeresult('\t'.join([seq.id, 'no blast hit found', '\n']), out_path)
 		
 	return
 		

@@ -6,7 +6,7 @@
 
 
 # import the argparse module to handle the input commands
-import argparse
+import argparse, sys
 
 # get the commandline arguments that specify the input fastafile and the output file
 parser = argparse.ArgumentParser(description = ('Trim sequences to make these easier to cluster, trimming is based on the alignements of certain markers that the region of interst'))
@@ -40,13 +40,11 @@ def extract_seq (seq_file):
 	return seq_dic
 
 def find_muscle_path ():
-	from subprocess import Popen, PIPE	
-	
-	# uses the linux 'find' command to locate the muscle file
-	muscle_path = Popen(['find', '/home' ,'-name', 'muscle*'], stdout=PIPE)
-	muscle_path = muscle_path.communicate()[0].split('\n')[0]
+	# find the path to the muscle program
+	path_file = open('/'.join(sys.argv[0].split('/')[:-1])+'/paths.txt', 'r')
+	muscle_path = [line.split('\t')[1].replace('\n','') for line in path_file if 'muscle' in line]
 		
-	return muscle_path
+	return muscle_path[0]
 
 def clean_up (file_path):
 	from subprocess import call
@@ -122,6 +120,10 @@ def get_marker_seq (sequence_dic, reference, samples):
 	reference_keys = reference.keys()
 	
 	marker_dic = {}
+	
+	# check if -n samples is smaller then the number of sequences, if not samples ==
+	# len(sequences)
+	if samples > len(sequence_keys): samples = len(sequence_keys)
 	
 	# sample a x number of sequences from the sequence dictionary
 	for sequence in sample(sequence_keys, samples):
@@ -228,9 +230,11 @@ def main ():
 		reference = extract_seq(args.r)
 	else:
 		reference = 'no'
+	print('obtaining marker sequences')
 	marker = get_marker_seq(sequence_dic, reference, args.n)
 	
 	# trim the sequences
+	print('trimming sequences')
 	trim_sequences_process(sequence_dic, marker, args.t, args.s, args.o)
 	
 if __name__ == "__main__":

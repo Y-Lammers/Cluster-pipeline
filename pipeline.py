@@ -3,8 +3,7 @@
 
 
 # import the argparse module to handle the input commands
-import argparse
-import sys
+import argparse, sys
 
 # get the commandline arguments for the various input file, settings and output files
 parser = argparse.ArgumentParser(description = 'Pipeline to process 454 reads, clusters and identifies')
@@ -28,7 +27,7 @@ parser.add_argument('--trim_ref', metavar='reference based trimming', type=str,
 parser.add_argument('--save_no_match', metavar='save unligned seqs', type=str, 
 			help='Save the sequences that cannot be aligned yes / no (default: yes)', default='yes')
 parser.add_argument('--program', metavar='cluster program', type=str, 
-			help='The cluster program that will be used to cluster the 454 reads: uclust / cdhit (default: uclust)', default='uclust')
+			help='The cluster program that will be used to cluster the 454 reads: uclust / cdhit / usearch (default: uclust)', default='uclust')
 parser.add_argument('--similarity', metavar='sequene similarity for clustering', type=str, 
 			help='Sequence similarity threshold used for clustering (default: 0.97)', default='0.97')
 parser.add_argument('--blast', metavar='blast method', type=str, 
@@ -68,6 +67,11 @@ def check_dir (out_dir):
 	except:
 		os.mkdir(out_dir)
 
+def get_program_path (pipe_path):
+	from subprocess import Popen, PIPE
+	
+	path = Popen(['python', (pipe_path + 'paths.py'), pipe_path])
+
 def filter_seq (pipe_path, fasta_files, length, duplicate, out_dir):
 	from subprocess import Popen, PIPE	
 
@@ -106,13 +110,21 @@ def trim (pipe_path, fasta_file, reference_file, save, out_dir):
 
 	return out_file
 
-def cluster (fasta_file, similarity, program, out_dir):
+def cluster (pipe_path, fasta_file, similarity, program, out_dir):
 	from subprocess import call
 	
-	# run the QIIME pick_otus.py script for fasta sequences and settings
-	p = call(['pick_otus.py', '-i', fasta_file, '-o', out_dir, '-m', program, '-s', similarity])
+	# set the output file
+	out_file = out_dir + 'clustered'
+	print(out_file)
 	
-	return
+	# run the QIIME pick_otus.py script for fasta sequences and settings
+	p = call(['python', (pipe_path + 'cluster.py'), '-i', fasta_file, '-o', out_file, '-p', program, '-s', similarity])
+
+	cluster_file = out_dir + '.'.join(fasta_file.split('/')[-1].split('.')[:-1]) + '_otus.txt'
+	print(cluster_file)
+
+	# change the output format to a general QIIME-like format
+	p = call(['python', (pipe_path + 'cluster_to_txt.py'), '-c', out_file, '-o', cluster_file, '-p', program])
 	
 def cluster_stat (pipe_path, cluster_file, clust_time, out_dir):
 	from subprocess import call
@@ -179,6 +191,9 @@ def main ():
 	else: out_dir = args.out_dir
 	check_dir(out_dir)
 	
+	# check if the program paths are set
+	get_program_path(pipe_path)
+	
 	input_files = args.input_file
 	
 	# check if the inputfiles need filtering
@@ -203,7 +218,7 @@ def main ():
 	# cluster the fasta file with the desired settings
 	print('Clustering sequence file')
 	time1 = time.time()
-	cluster(fasta_file, args.similarity, args.program, out_dir)	
+	cluster(pipe_path, fasta_file, args.similarity, args.program, out_dir)	
 	cluster_file = out_dir + '.'.join(fasta_file.split('.')[:-1]).split('/')[-1] + '_otus.txt'
 	
 	# get the cluster information
@@ -232,7 +247,7 @@ def main ():
 	
 	# combine cluster and identification files (only when multiple fasta files are used
 	# and the --pipeline parameter is set to cluster
-	if args.pipeline == 'cluster' or 'merge': 
+	if args.pipeline == 'cluster' or args.pipeline == 'merge': 
 		print('Check the origin of the sequences in the clusters')
 		compare_cluster(pipe_path, cluster_file, iden_file, (out_dir + 'tag_file.txt'), args.min_size, args.pipeline, rep_seq, out_dir)
 	
