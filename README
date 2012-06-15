@@ -3,6 +3,8 @@ Description:
 The 454 pipeline streamlines the QIIME package and allows easy
 clustering and identification of environmental 454 sequence reads.
 
+update: QIMME isn't required anymore.
+
 
 Scripts:
 
