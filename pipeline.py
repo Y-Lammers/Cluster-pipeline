@@ -38,6 +38,10 @@ parser.add_argument('--accession', metavar='genbank accession', type=str,
 			help='Does the reference file contain accession codes in the fasta header (indicated by the |\'s) yes / no (default" no)', default='no')			
 parser.add_argument('--unite', metavar='unite reference', type=str, 
 			help='Is the unite reference database used yes / no (if yes this sets the accession parameter automatically to \'yes\')', default='no')			
+parser.add_argument('--blast_percentage', metavar='minimum blast percentage', type=float,
+			help='Filter out the blast hits under the minimum blast percentage', default = 0.0)
+parser.add_argument('--blast_length', metavar='minimum blast length', type=int,
+			help='Filter out the blast hits under the minimum blast length', default = 0)
 parser.add_argument('--pick_rep', metavar='otu sequence picking', type=str, 
 			help='Method how the OTU representative sequence will be picked: random / consensus / combined (default: random)', default='random')
 parser.add_argument('--min_size', metavar='minimum OTU size', type=int, 
@@ -165,6 +169,16 @@ def local_blast (pipe_path, fasta_file, reference, accession, unite, out_dir):
 
 	return output_file
 
+def filter_blast (pipe_path, blast_file, blast_percentage, blast_length):
+	from subprocess import call
+	
+	# run the blast .csv filter script (filter_blast.py)
+	output_file = '.'.join(blast_file.split('.')[:-1]) + '_filtered.csv'
+	p = call(['python', (pipe_path + 'filter_blast.py'), '-b', blast_file, '-o', output_file,
+			'-p', str(blast_percentage), '-l', str(blast_length)])
+
+	return output_file
+
 def compare_cluster (pipe_path, cluster_file, blast_file, tag_file, min_size, pipeline, rep_seq, out_dir):
 	from subprocess import call
 
@@ -244,6 +258,10 @@ def main ():
 			reference = args.reference[0]
 		
 		iden_file = local_blast(pipe_path, rep_seq, reference, args.accession, args.unite, out_dir)
+	
+	# check if filtering needs to be aplied to the blast hits
+	if args.blast_percentage != 0.0 or args.blast_length != 0:
+		iden_file = filter_blast (pipe_path, iden_file, args.blast_percentage, args.blast_length)
 	
 	# combine cluster and identification files (only when multiple fasta files are used
 	# and the --pipeline parameter is set to cluster
