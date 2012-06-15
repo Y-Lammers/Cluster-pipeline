@@ -9,6 +9,7 @@
 
 # import the argparse module to handle the input commands
 import argparse
+import sys
 
 # get the commandline arguments for the input files and output directory and user settings
 parser = argparse.ArgumentParser(description = 'retrieve a represented otu from each cluster')
@@ -73,7 +74,7 @@ def write_results (sequence, header, cluster, clust_length, out_path):
 def find_muscle_path ():
 	# find the path to the muscle program
 	path_file = open('/'.join(sys.argv[0].split('/')[:-1])+'/paths.txt', 'r')
-	muscle_path = [line.split('\t')[1] for line in path_file if 'muscle' in line]
+	muscle_path = [line.split('\t')[1] for line in path_file if 'muscle' in line][0].replace('\n','')
 		
 	return muscle_path
 
