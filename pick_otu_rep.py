@@ -67,7 +67,7 @@ def write_results (sequence, header, cluster, clust_length, out_path):
 	# write a fasta sequence to the output file, the header of the sequence
 	# contains information about the cluster it is based on and the length of the cluster
 	out_file = open(out_path, 'a')
-	seq = SeqRecord(sequence, id=(header + '_cluster_#:' + str(cluster) + '_length_cluster:' + str(clust_length)), description='')
+	seq = SeqRecord(sequence, id=(header + '_cluster_#:' + str(cluster) + '_length_cluster:' + str(clust_length) + '_'), description='')
 	SeqIO.write(seq, out_file, 'fasta')
 	out_file.close()
 
