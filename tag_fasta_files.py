@@ -53,7 +53,7 @@ def retrieve_fasta_files (fasta_file_list, out_dir):
 		# The Biopython modules is used to parse through the fasta file
 		for seq in SeqIO.parse(fasta_path, 'fasta'):
 			# for each sequence the tag is added to the sequence header (seq.id)
-			new_seq = SeqRecord(seq.seq, id=(tag + '_' + seq.id), description='')
+			new_seq = SeqRecord(seq.seq, id=(tag + '_' + seq.description), description='')
 				
 			# the resulting sequence is written to the output file
 			output_file = open(output_path, 'a')

@@ -54,7 +54,7 @@ def extract_seq (seq_file):
 	for fasta_file in seq_file:
 		# Create a dictionary of fasta sequences with the headers as keys
 		for seq_record in SeqIO.parse(fasta_file, 'fasta'):
-			seq_dic[seq_record.id] = seq_record.seq
+			seq_dic[seq_record.description] = seq_record.seq
 	
 	# return the dictonary containing the sequences from the list of input files
 	return seq_dic
