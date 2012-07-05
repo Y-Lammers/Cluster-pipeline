@@ -198,7 +198,7 @@ def main ():
 	import time
 	
 	# get pipeline path
-	pipe_path = get_path(sys.argv[0])
+	pipe_path = get_path(sys.argv[0]) + '/'
 	
 	# check / make the output directory
 	if args.out_dir[-1] != '/': out_dir = args.out_dir + '/'
