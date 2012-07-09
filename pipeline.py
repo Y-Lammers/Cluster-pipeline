@@ -51,15 +51,12 @@ parser.add_argument('--rand_cons', metavar='# random sequences used for the cons
 args = parser.parse_args()
 
 def get_path (pipeline):
-	from subprocess import Popen, PIPE
+	import os
 	
 	# get full path to pipeline dir
-	path = Popen(['pwd'], stdout=PIPE)
-	path = path.communicate()[0].replace('\n','')
-
-	if '/home/' in path: path += '/' + '/'.join(pipeline.split('/')[:-1])
-	else: path = '/' + '/'.join(pipeline.split('/')[:-1])
-
+	path = os.path.abspath(pipeline)
+	path = '/'+ '/'.join(path.split('/')[:-1]) + '/'
+	
 	return path
 
 def check_dir (out_dir):
@@ -198,7 +195,7 @@ def main ():
 	import time
 	
 	# get pipeline path
-	pipe_path = get_path(sys.argv[0]) + '/'
+	pipe_path = get_path(sys.argv[0])
 	
 	# check / make the output directory
 	if args.out_dir[-1] != '/': out_dir = args.out_dir + '/'
