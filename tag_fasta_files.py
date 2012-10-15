@@ -1,3 +1,8 @@
+# The tag_fasta_files.py script provides a fasta file with 'tags' for each
+# sequence header, based on these tags the input files from which sequences
+# came from can be traced after clustering.
+
+
 # import the argparse module to handle the input commands
 import argparse
 
@@ -48,8 +53,8 @@ def retrieve_fasta_files (fasta_file_list, out_dir):
 		# The Biopython modules is used to parse through the fasta file
 		for seq in SeqIO.parse(fasta_path, 'fasta'):
 			# for each sequence the tag is added to the sequence header (seq.id)
-			new_seq = SeqRecord(seq.seq, id=(tag + '_' + seq.id), description='')
-			
+			new_seq = SeqRecord(seq.seq, id=(tag + '_' + seq.description), description='')
+				
 			# the resulting sequence is written to the output file
 			output_file = open(output_path, 'a')
 			SeqIO.write(new_seq, output_file, 'fasta')
@@ -62,7 +67,11 @@ def retrieve_fasta_files (fasta_file_list, out_dir):
 		tag_file.write(fasta_path + '\t' + output_path + '\t' + tag + '\n')
 		tag_file.close()
 
-retrieve_fasta_files(args.i, args.o)
-
-
+def main ():
+	
+	# go through the sequence file list, and retag each sequence
+	retrieve_fasta_files(args.i, args.o)
+	
+if __name__ == "__main__":
+    main()
 
