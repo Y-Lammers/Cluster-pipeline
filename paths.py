@@ -6,13 +6,27 @@ import sys
 
 def search(program):
 	# import modules to run bash commands and read the shell information
-	from subprocess import Popen, PIPE
+	from subprocess import call
+	import os
 
-	# use the linux 'find' command to find the program
-	path = Popen(['find', '/home/', '/usr/', '/software/' ,'-name', program], stdout=PIPE)
-	path = path.communicate()[0].split('\n')[0]
+	# get all files related to the program
+	file_list = []
+	for (paths, dirs, files) in os.walk('/'):
+	    for file in files:
+        	if program == file.split('/')[-1][:len(program)]:
+        	    file_list.append(os.path.join(paths, file))
+
+	file_list.sort(key = len)
 	
-	return path
+	# run each program in order to determine the correct path
+	for item in file_list:
+		try:
+			p = call([item])#, stdout=open(os.devnull, 'w'))
+			return item
+		except:
+			pass
+
+	return 'no path found'
 	
 def main ():
 	
@@ -24,7 +38,7 @@ def main ():
 		path_file = open(sys.argv[1] + 'paths.txt', 'w')
 		
 		# look for the program and save the results
-		for path in ['muscle*', 'usearch*', 'cd-hit', 'uclust', 'makeblastdb', 'blastn']:
+		for path in ['muscle', 'usearch', 'cd-hit', 'uclust', 'makeblastdb', 'blastn']:
 			filepath = search(path)
 			path_file.write(path + '\t' + filepath + '\n')
 
