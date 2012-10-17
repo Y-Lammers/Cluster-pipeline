@@ -62,7 +62,7 @@ def main ():
 	paths = get_path()
 	
 	if args.p == 'usearch':
-		run_usearch(paths['usearch*'], args.i, args.s, args.o)
+		run_usearch(paths['usearch'], args.i, args.s, args.o)
 	elif args.p == 'cdhit':
 		run_cdhit(paths['cd-hit'], args.i, args.s, args.o)
 	elif args.p == 'uclust':

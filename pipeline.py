@@ -69,9 +69,9 @@ def check_dir (out_dir):
 		os.mkdir(out_dir)
 
 def get_program_path (pipe_path):
-	from subprocess import Popen, PIPE
+	from subprocess import call
 	
-	path = Popen(['python', (pipe_path + 'paths.py'), pipe_path])
+	path = call(['python', (pipe_path + 'paths.py'), pipe_path])
 
 def filter_seq (pipe_path, fasta_files, length, duplicate, out_dir):
 	from subprocess import Popen, PIPE	
