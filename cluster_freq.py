@@ -13,8 +13,8 @@ parser.add_argument('-f', metavar='cluster fasta file', type=str,
 			help='enter the cluster fasta file')
 parser.add_argument('-t', metavar='tag file', type=str, 
 			help='enter the tag file')
-parser.add_argument('-o', metavar='output file', type=str, 
-			help='the output file path')
+parser.add_argument('-o', metavar='output directory', type=str, 
+			help='the output directory')
 parser.add_argument('-b', metavar='blast file', type=str,
 			help='the file with the blast identifications')
 parser.add_argument('-m', metavar='merge clusters', type=str,
@@ -62,7 +62,7 @@ def get_cluster_name (fasta_file):
 	
 	return cluster_dic
 
-def combine (otu_list, seq_dic, cluster_dic, merge):
+def combine (otu_list, seq_dic, cluster_dic, merge, out_dir):
 	
 	# combine the blast and otu results, if the merge parameter is set to yes,
 	# clusters will be combined if they have the same blast hit
@@ -87,7 +87,7 @@ def combine (otu_list, seq_dic, cluster_dic, merge):
 				combine_dic[blast][0] += otu
 				combine_dic[blast][1] += cluster
 			except:
-				combine_dic[blast] = [otu, cluster]
+				combine_dic[blast] = [otu, cluster, 'cluster' + str(count)]
 		# add a unique number to the blast hit if the data will not be merged,
 		# this will prevent overwrites over other clusters that share the same
 		# blast information
@@ -95,13 +95,15 @@ def combine (otu_list, seq_dic, cluster_dic, merge):
 			combine_dic[str(count) + '_____num_____' + blast] = [otu, cluster]
 		count += 1
 	
+	merged_table(combine_dic, out_dir)
+	
 	return combine_dic
 			
 	
-def write_result (tag_dic, tag_list, header, blast, out_path):
+def write_result (tag_dic, tag_list, header, blast, out_dir):
 
 	# write the results
-	out_file = open(out_path, 'a')
+	out_file = open(out_dir + 'cluster_input_seqs.csv', 'a')
 	if header == 'yes': out_file.write('Cluster\tBlast idenification\tPercentage matched\tlength match\taccession\tgenus\tspecies\ttaxonomy\t' + '\t'.join([item[0] for item in tag_list]) + '\n')
 	temp = '\t'.join(blast)
 	for item in tag_list:
@@ -110,8 +112,17 @@ def write_result (tag_dic, tag_list, header, blast, out_path):
 		except:
 			temp += ('\t0')
 	out_file.write(temp + '\n')
+	
+def merged_table (combine_dic, out_dir):
+	
+	# create a table that lists the clusters present in each cluster
+	# in the cluster_input_seqs.csv file.
+	out_file = open(out_dir + 'merged_cluster_table.csv', 'a')
+	
+	for item in combine_dic:
+		out_file.write(combine_dic[item][2] + '\t' + ' - '.join(combine_dic[item][1]) + '\n')
 
-def otu_freq_dist (combine_dic, tag_list, blast_dic, min_size, out_path):
+def otu_freq_dist (combine_dic, tag_list, blast_dic, min_size, merge, out_dir):
 	
 	# retrieve the otu clusters that meet the size restriction
 	header = 'yes'
@@ -136,9 +147,12 @@ def otu_freq_dist (combine_dic, tag_list, blast_dic, min_size, out_path):
 			# try to obtain the expanded blast description for the cluster
 			if item2 in blast_key:
 				blast = blast_dic[item2]
-			blast[0] = '- '.join(combine_dic[item][1])
-			write_result(tag_dic, tag_list, header, blast, out_path)
-			header = 'no'			
+			if merge != 'no':
+				blast[0] = combine_dic[item][2]
+			else:
+				blast[0] = combine_dic[item][1]
+			write_result(tag_dic, tag_list, header, blast, out_dir)
+			header = 'no'		
 
 def main ():
 	# get the tags
@@ -154,7 +168,7 @@ def main ():
 	otu_name = get_cluster_name(args.f)
 	
 	# combine and export the information
-	otu_freq_dist(combine(otu_seqs, blast[1], otu_name, args.m), tag, blast[0], args.s, args.o)
+	otu_freq_dist(combine(otu_seqs, blast[1], otu_name, args.m, args.o), tag, blast[0], args.s, args.m, args.o)
 	
 if __name__ == "__main__":
     main()
