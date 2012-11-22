@@ -25,7 +25,10 @@ args = parser.parse_args()
 
 def get_path ():
 	# get the filepaths to the blast+ programs
-	path_file = open('/'.join(sys.argv[0].split('/')[:-1])+'/paths.txt', 'r')
+	try:
+		path_file = open('paths.txt', 'r')
+	except:
+		path_file = open('/'.join(sys.argv[0].split('/')[:-1])+'/paths.txt', 'r')
 	paths, path_dic = [line.split('\t') for line in path_file], {}
 	
 	for line in paths:

@@ -31,10 +31,11 @@ def get_tag (tag_file):
 def get_blast (blast_file):
 	
 	# parse the blast file and retrieve the identications
-	blast_dic, seq_dic = {}, {}
+	blast_dic, seq_dic, count = {}, {}, 0
 	for line in open(blast_file, 'r'):
 		if 'Percentage matched' not in line:
 			line = line.replace('\"','').replace('\n','').split('\t')
+			count += 1
 			for i in range(0, len(line)):
 				if '_cluster_' in line[i]:
 					if len(line) > 15:
@@ -43,12 +44,13 @@ def get_blast (blast_file):
 						blast_dic[line[i+1]] = line[i:(i+4)]+['','','','']
 					seq_dic[line[i].split('_cluster_')[0]] = line[i+1]
 
+	print('number of blast hits ' + str(count))
 	return [blast_dic, seq_dic]
 	
-def get_otu (otu_file):
+def get_otu (otu_file, min_size):
 	
 	# return a nested list with all the sequences in the OTU's
-	return [line.replace('\n','').split('\t')[1:] for line in open(otu_file, 'r')]
+	return [line.replace('\n','').split('\t')[1:] for line in open(otu_file, 'r') if len(line.replace('\n','').split('\t')[1:]) >= min_size]
 
 def get_cluster_name (fasta_file):
 	# import the biopython module to process the fasta file
@@ -75,10 +77,10 @@ def combine (otu_list, seq_dic, cluster_dic, merge, out_dir):
 		# for each sequence present in the otu
 		for seq in otu:
 			# check if there is a blast hit available for the sequence
-			if seq in seq_key:
+			if seq in seq_dic:
 				blast = seq_dic[seq]
 			# check if there sequence is also the name of a full otu
-			if seq in cluster_key:
+			if seq in cluster_dic:
 				cluster = [cluster_dic[seq]]
 		# if the merge paramter is set to 'merge', the otu information will be
 		# merged with other otus that share the same blast information
@@ -122,7 +124,7 @@ def merged_table (combine_dic, out_dir):
 	for item in combine_dic:
 		out_file.write(combine_dic[item][2] + '\t' + ' - '.join(combine_dic[item][1]) + '\n')
 
-def otu_freq_dist (combine_dic, tag_list, blast_dic, min_size, merge, out_dir):
+def otu_freq_dist (combine_dic, tag_list, blast_dic, merge, out_dir):
 	
 	# retrieve the otu clusters that meet the size restriction
 	header = 'yes'
@@ -131,28 +133,27 @@ def otu_freq_dist (combine_dic, tag_list, blast_dic, min_size, merge, out_dir):
 	# go through the dictionary that contains the otu's
 	for item in combine_dic:
 		# check if the length of the otu is larger then the size threshold
-		if len(combine_dic[item][0]) >= min_size:
-			tag_dic, blast = {}, ['seq', 'No identification', '','','','','','']
-			# go through the otu sequences and count based on the tag
-			# how many sequences there are present from each input dataset
-			for seq in combine_dic[item][0]:
-				try:
-					tag_dic[seq.split('_')[0]] += 1
-				except:
-					tag_dic[seq.split('_')[0]] = 1
-			if '_____num_____' in item:
-				item2 = item.split('_____num_____')[1]
-			else:
-				item2 = item
-			# try to obtain the expanded blast description for the cluster
-			if item2 in blast_key:
-				blast = blast_dic[item2]
-			if merge != 'no':
-				blast[0] = combine_dic[item][2]
-			else:
-				blast[0] = combine_dic[item][1]
-			write_result(tag_dic, tag_list, header, blast, out_dir)
-			header = 'no'		
+		tag_dic, blast = {}, ['seq', 'No identification', '','','','','','']
+		# go through the otu sequences and count based on the tag
+		# how many sequences there are present from each input dataset
+		for seq in combine_dic[item][0]:
+			try:
+				tag_dic[seq.split('_')[0]] += 1
+			except:
+				tag_dic[seq.split('_')[0]] = 1
+		if '_____num_____' in item:
+			item2 = item.split('_____num_____')[1]
+		else:
+			item2 = item
+		# try to obtain the expanded blast description for the cluster
+		if item2 in blast_key:
+			blast = blast_dic[item2]
+		if merge != 'no':
+			blast[0] = combine_dic[item][2]
+		else:
+			blast[0] = combine_dic[item][1]
+		write_result(tag_dic, tag_list, header, blast, out_dir)
+		header = 'no'		
 
 def main ():
 	# get the tags
@@ -162,13 +163,13 @@ def main ():
 	blast =  get_blast(args.b)
 	
 	# get otus sequences
-	otu_seqs = get_otu(args.c)
+	otu_seqs = get_otu(args.c, args.s)
 	
 	# get the otu names
 	otu_name = get_cluster_name(args.f)
 	
 	# combine and export the information
-	otu_freq_dist(combine(otu_seqs, blast[1], otu_name, args.m, args.o), tag, blast[0], args.s, args.m, args.o)
+	otu_freq_dist(combine(otu_seqs, blast[1], otu_name, args.m, args.o), tag, blast[0], args.m, args.o)
 	
 if __name__ == "__main__":
     main()
