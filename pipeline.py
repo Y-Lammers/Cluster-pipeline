@@ -124,14 +124,13 @@ def pick_rep_seq (pipe_path, fasta_file, cluster_file, method, min_size, out_dir
 	# get rep sequence from cluster file
 	output_file = out_dir + 'clust_rep.fasta'
 	if program == 'cdhit' or program == 'tgicl': method = 'random'
-	if method == 'random': proc = call(['python', (pipe_path + 'pick_otu_rep.py'), '-i', fasta_file, '-o', output_file, '-c', cluster_file, '-m', str(min_size)])
- 	if method == 'consensus':
+	if method == 'random': 
+		proc = call(['python', (pipe_path + 'pick_otu_rep.py'), '-i', fasta_file, '-o', output_file, '-c', cluster_file, '-m', str(min_size), '-s', method])
+ 	elif method == 'consensus':
 		fasta_file = '/'.join(cluster_file.split('/')[:-1]) + '/'
 		if program == 'usearch' or program == 'usearch_old': fasta_file += 'clustered_cons'
 		if program == 'octupus': fasta_file += 'octulist'
-		if program == 'tgicl': fasta_file += 'merged_contigs'
 		proc = call(['python', (pipe_path + 'pick_otu_rep.py'), '-i', fasta_file, '-o', output_file, '-c', cluster_file, '-m', str(min_size), '-s', method, '-p', program])
-	#if method == 'combined': proc = call(['python', (pipe_path + 'pick_otu_rep.py'), '-i', fasta_file, '-o', output_file, '-c', cluster_file, '-m', str(min_size), '-s', method, '-r', str(rand)])
 
 	return output_file
 

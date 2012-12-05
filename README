@@ -1,7 +1,7 @@
 Description:
 
-The 454 pipeline streamlines the QIIME package and allows easy
-clustering and identification of environmental 454 sequence reads.
+A pipeline for clustering and identifying barcode sequences from a next-generation
+sequencer such as Roche 454 or the Ion Torrent.
 
 
 Scripts:
@@ -12,15 +12,27 @@ This project contains the following scripts:
 				files and executes the other scripts
 				and programs.
  
+ - paths.py			Search the system for the tools and 
+				scripts that are needed to run the pipeline.
+				The programs used are listed below.
+
+ - filter.py			A small python script that can filter
+				the input data based on size or remove
+				duplicate sequences.
+
  - tag_fasta_files.py		When dealing with multiple datasets,
 				each set can be tagged to identify the
 				and compare different datasets during
 				downstream analysis.
 
  - pick_otu_rep.py		It takes the OTU output files from
-				QIIME's 'pick_otus' script and based
-				on the users settings it picks a
-				representative sequence for each cluster.
+				the various cluster programs and pick
+				a consensus or random sequence for 
+				identification.
+
+ - cluster_to_txt.py		Normalize the OTU information to a tsv file.
+				It contains the sequence names present in 
+				a cluster.
 
  - custom_blast_db.py		Uses the NCBI-blast+ program to set up
 				a blast database based on a reference
@@ -29,6 +41,9 @@ This project contains the following scripts:
 
  - blast.py			Identifies sequences by blasting them
 				against the genbank database.
+
+ - filter_blast.py		Filter the genbank or local blast results based
+				on hit length or similarity.
 
  - cluster_freq.py		When dealing with multiple input files
 				it takes the clustering results and
@@ -39,16 +54,6 @@ This project contains the following scripts:
  				basic information about the number of 
  				sequences used, number of cluster and 
  				the size of the clusters.
- 				
- - filter.py			Filter the 454 reads based on sequence length
- 				or duplicates
- 
- - trim_sequence.py		Trim the input sequences bases on either a 
- 				reference sequence set, or the input sequences
- 				themselves. This can eliminate clustering
- 				issues when the set of input sequences varies
- 				greatly in length. Note, this might not work
- 				for greatly diverged sequences.
 
 Requirements:
 
@@ -63,14 +68,12 @@ This project require the following the following software / tools:
 				sequences, multiple sequence alignments
 				and genbank files.
 
- - QIIME pipeline		This project uses the QIIME pipeline
-				to cluster the sequences into OTUs. The
-				pipeline uses the 'pick_otus' script
-				and modules to cluster sequences with
-				a wide array of cluster programs.
-
  - NCBI-Blast-2.2.25+		Blast+ is used to identify sequences
 				with a custom made refrence database.
 
- - muscle3.8.31			With muscle multiple sequence alignments
-				are made of the cluster results.
+Any of the following cluster programs:
+ - TGICL
+ - Usearch 6.0 or newer 	(the older versions can be used by specifying
+				--program usearch_old when using the pipeline).
+ - Octupus (default)
+ - cd-hit

@@ -25,7 +25,7 @@ parser.add_argument('-m', metavar='minimal cluster size', type=int,
 parser.add_argument('-s', metavar='select method', type=str, 
 			help='the method used to select a representative sequence for a cluster: consensus or random (default consensus) * note the consensus option is not available for cd-hit or tgicl, it will automatically change to the random setting', default='consensus')
 parser.add_argument('-p', metavar='cluster program  used', type=str,
-			help='the program used for the cluster analysis')
+			help='the program used for the cluster analysis (default: octupus)', default='octupus')
 args = parser.parse_args()
 
 def extract_otu (otufile):
@@ -106,9 +106,8 @@ def get_cons_seq (seq_dic, otu_seq_dic, out_path, program, min_size):
 	
 def main ():
 	# change the cluster setting to random when the cd-hit or tgicl program is used for clustering
-	mode =  args.p	
-	if args.p == 'tgicl' or args.p == 'cdhit': mode = 'random'
-	
+	mode = args.s
+
 	# check which method needs to be used to retrieve the representative sequence
 	if mode == 'random':
 		get_rand_seq(extract_seq(args.i), extract_otu(args.c), args.o, args.m)
