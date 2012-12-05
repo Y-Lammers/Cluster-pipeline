@@ -104,7 +104,6 @@ def cluster (pipe_path, fasta_file, similarity, program, out_dir, cores):
 	p = call(['python', (pipe_path + 'cluster.py'), '-i', fasta_file, '-o', out_file, '-p', program, '-s', similarity, '-c', str(cores)])
 
 	cluster_file = out_dir + '.'.join(fasta_file.split('/')[-1].split('.')[:-1]) + '_otus.txt'
-	print(cluster_file)
 
 	# change the output format to a general QIIME-like format
 	p = call(['python', (pipe_path + 'cluster_to_txt.py'), '-c', out_file, '-o', cluster_file, '-p', program])

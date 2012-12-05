@@ -41,8 +41,6 @@ def run_usearch (usearch, sequence_file, similarity, output_file):
 	from subprocess import call
 
 	p = call([usearch, '-cluster_fast', sequence_file, '-id', similarity, '-uc', output_file, '-consout', output_file + '_cons'])
-	#p = call([usearch, '-cluster', sequence_file + '.sorted', '-uc', output_file, '-id', similarity, '-consout', output_file + '_cons'])
-	#command('rm ' + sequence_file + '.sorted')
 
 def run_usearch_old (usearch, sequence_file, similarity, output_file):
 	# import module that allows the usearch tool to be run
@@ -83,7 +81,7 @@ def run_tgicl (tgicl, sequence_file, similarity, output_dir, proc):
 	cmd_list = ['mv ' + run_directory + '*_cl_clusters ' + output_dir + 'clustered_cl_clusters',
 			'mv ' + run_directory + '*.singletons ' + output_dir + 'clustered.singletons',
 			'rm ' + sequence_file + '.*', 'rm ' + run_directory + 'masked.lst',
-			'rm ' + run_directory + '*tgicl*', 'rm ' + run_directory + 'formatdb.log', 'rm ' + run_directory + '*_cl_*',
+			'rm ' + run_directory + '*tgicl*', 'rm ' + run_directory + '*.log', 'rm ' + run_directory + '*_cl_*',
 			'rm -rf ' + run_directory + 'asm_*']
 
 	for cmd in cmd_list:
@@ -93,6 +91,8 @@ def run_octupus (octu, sequence_file, similarity, output_dir):
 	# import module that allows the octupus tool to be run
 	from subprocess import call
 	
+	run_directory = '/'.join(sys.argv[0].split('/')[:-1]) + '/'
+
 	# convert the similarity scores to the format used by octupus
 	if similarity == '1.0': similarity = '1'
 	if '0.' in similarity: similarity.replace('0.','')
@@ -104,8 +104,10 @@ def run_octupus (octu, sequence_file, similarity, output_dir):
 	p = call([octu, sequence_file, similarity, '0', output_dir])
 
 	# rename the octupus cluster file so it can be used by the other scripts downstream
-	cmd = 'mv \"' + output_dir + 'octuall.seq\" \"' + output_dir + 'clustered\"'
-	p = call(cmd, shell = True)
+	cmd_list = ['mv \"' + output_dir + 'octuall.seq\" \"' + output_dir + 'clustered\"', 
+			'rm ' + run_directory + '*.log']
+	for cmd in cmd_list:
+		p = call(cmd, shell = True)
 
 
 def run_cdhit (cdhit, sequence_file, similarity, output_file):
