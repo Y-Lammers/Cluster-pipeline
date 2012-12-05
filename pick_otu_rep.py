@@ -106,12 +106,13 @@ def get_cons_seq (seq_dic, otu_seq_dic, out_path, program, min_size):
 	
 def main ():
 	# change the cluster setting to random when the cd-hit or tgicl program is used for clustering
-	if args.p == 'tgicl' or args.p == 'cdhit': args.s = 'random'
+	mode =  args.p	
+	if args.p == 'tgicl' or args.p == 'cdhit': mode = 'random'
 	
 	# check which method needs to be used to retrieve the representative sequence
-	if args.s == 'random':
+	if mode == 'random':
 		get_rand_seq(extract_seq(args.i), extract_otu(args.c), args.o, args.m)
-	elif args.s == 'consensus':
+	elif mode == 'consensus':
 		get_cons_seq(extract_seq(args.i), extract_otu(args.c), args.o, args.p, args.m)	
 
 if __name__ == "__main__":
