@@ -119,7 +119,7 @@ def cluster_stat (pipe_path, cluster_file, clust_time, out_dir):
 	# cluster file
 	p = call(['python', (pipe_path + 'cluster_stat.py'), '-c', cluster_file, '-t', clust_time, '-o', out_file])
 	
-def pick_rep_seq (pipe_path, fasta_file, cluster_file, method, min_size, rand, out_dir, program):
+def pick_rep_seq (pipe_path, fasta_file, cluster_file, method, min_size, out_dir, program):
 	from subprocess import call
 
 	# get rep sequence from cluster file
@@ -221,7 +221,7 @@ def main ():
 	
 	# pick representative sequence for each cluster
 	print('Picking representative sequences for clusters')
-	rep_seq = pick_rep_seq(pipe_path, fasta_file, cluster_file, args.pick_rep, args.min_size, args.rand_cons, output_dir, args.program)
+	rep_seq = pick_rep_seq(pipe_path, fasta_file, cluster_file, args.pick_rep, args.min_size, output_dir, args.program)
 	
 	# identify the clusters
 	print('Identifying clusters')
