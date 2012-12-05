@@ -26,12 +26,14 @@ parser.add_argument('-s', metavar='select method', type=str,
 			help='the method used to select a representative sequence for a cluster: \'random\' (default), \'consensus\' or \'combined\', please note: using the consensus option on large cluster can take a lot of time and computer power to finnish, use \'combined\' when more speed is needed', default='random')
 parser.add_argument('-r', metavar='number of random sequences used for the consensus', type=int,
 			help='the number of random sequences that will be used to create a consensus sequence (select method: \'combined\' only', default=10)
+parser.add_argument('-p', metavar='cluster program  used', type=str,
+			help='the program used for the cluster analysis')
 args = parser.parse_args()
 
-def size_filt (otufile, minsize):
+def extract_otu (otufile):
 	# retrieve the otu clusters that meet the size restriction
 	
-	otu_seq_dic = {}	
+	otu_seq_dic, sequence_header_dic = {}, {}
 
 	# parse through the OTU file
 	for line in open(otufile, 'r'):
@@ -39,10 +41,12 @@ def size_filt (otufile, minsize):
 		# the OTU, if the number of header matches the size threshold
 		# the cluster is stored
 		array = line.replace('\n', '').split('\t')
-		if len(array[1:]) >= minsize: 
-			otu_seq_dic[array[0]] = array[1:]
+		#if len(array[1:]) >= minsize: 
+		otu_seq_dic[array[0]] = array[1:]
+		for header in array[1:]:
+			sequence_header_dic[header] = [array[0], len(array[1:])]
 
-	return otu_seq_dic
+	return [otu_seq_dic, sequence_header_dic]
 
 def extract_seq (seq_file):
 	# The SeqIO module is imported from Biopython to ease the parsing of fasta files
@@ -54,11 +58,22 @@ def extract_seq (seq_file):
 	for fasta_file in seq_file:
 		# Create a dictionary of fasta sequences with the headers as keys
 		for seq_record in SeqIO.parse(fasta_file, 'fasta'):
-			seq_dic[seq_record.description] = seq_record.seq
+			seq_dic[seq_record.id] = seq_record.seq
 	
 	# return the dictonary containing the sequences from the list of input files
 	return seq_dic
-	
+
+#def extract_consensus (seq_file, otu_seq_dic, program):
+#	# the SeqIO module is imported from Biopython to parse the fasta file
+#	from Bio import SeqIO
+#
+#	seq_dic, header = {}, ''
+#
+#	# parse through the consensus file
+#	for seq_record in SeqIO.parse(seq_file[0], 'fasta'):
+#		if program == 'usearch': header = seq_record.id.replace('Cluster')
+#		elif program == 'usearch_old': header = seq_record.id.replace('Cluster')
+
 def write_results (sequence, header, cluster, clust_length, out_path):
 	# import a set of Biopython modules for sequence handling and writing
 	from Bio import SeqIO
@@ -71,81 +86,47 @@ def write_results (sequence, header, cluster, clust_length, out_path):
 	SeqIO.write(seq, out_file, 'fasta')
 	out_file.close()
 
-def find_muscle_path ():
-	# find the path to the muscle program
-	path_file = open('/'.join(sys.argv[0].split('/')[:-1])+'/paths.txt', 'r')
-	muscle_path = [line.split('\t')[1] for line in path_file if 'muscle' in line][0].replace('\n','')
-		
-	return muscle_path
-
-def clean_up (file_path):
-	from subprocess import call
-	
-	# removes a temporary file
-	p = call(['rm', file_path])
-
-def get_consensus ():
-	# Imports the necessairy biopython modules to handle multiple sequence
-	# alignment files and fasta files
-	from Bio import AlignIO
-	from Bio.Align import AlignInfo	
-	#from Bio.SeqRecord import SeqRecord	
-
-	# read the multiple sequence alignment file
-	alignment = AlignInfo.SummaryInfo(AlignIO.read('temp_align.txt', 'fasta'))
-	# return a consensus based on the alignment
-	sequence = alignment.dumb_consensus(ambiguous='N')
-	return sequence
-	
-def get_rand_seq (seq_dic, otu_seq_dic, out_path):
+def get_rand_seq (seq_dic, otu_seq_dic, out_path, min_size):
 	from random import choice
 
 	# keys = otu_seq_dic.keys()
 	
 	# parse through the dictionary containing the headers for each otu
-	for item in otu_seq_dic: #keys:
+	for item in otu_seq_dic[0]: #keys:
 		# randomly select 1 header to represent the otu
-		header = choice(otu_seq_dic[item])
+		header = choice(otu_seq_dic[0][item])
 		# the header + sequence are writen to the output fasta file
-		write_results(seq_dic[header], header, str(item), len(otu_seq_dic[item]), out_path)
+		if len(otu_seq_dic[0][item]) >= min_size:
+			write_results(seq_dic[header], header, str(item), len(otu_seq_dic[0][item]), out_path)
 
-def get_cons_seq (seq_dic, otu_seq_dic, seq_number, out_path):
-	from subprocess import call
-	from random import sample
-	
-	# get the headers that are present in each OTU and the path to the muscle executable
-	keys, muscle_path = otu_seq_dic.keys(), find_muscle_path()
-	
-	# parse through the dictionary containing the headers for each otu
-	for item in keys:	
-		# write either all sequences or a subset to the 'temp_in.fasta' file
-		if len(otu_seq_dic[item]) > seq_number and seq_number != False:		
-			for header in sample(otu_seq_dic[item], seq_number):
-				write_results(seq_dic[header], header, 1, len(otu_seq_dic[item]), 'temp_in.fasta')
-		else:
-			for header in otu_seq_dic[item]:
-				write_results(seq_dic[header], header, 1, len(otu_seq_dic[item]), 'temp_in.fasta')
-				
-		# align the newly created 'temp_in.fasta' file with muscle
-		p = call([muscle_path, '-in', 'temp_in.fasta', '-out', 'temp_align.txt', '-quiet'])
-		# remove the 'temp_in.fasta' file since this file is no longer needed
-		clean_up('temp_in.fasta')
+def get_cons_seq (seq_dic, otu_seq_dic, out_path, program, min_size):
+	# add aditional information to the cluster consensus files (cluster number and size)
 
-		# Get the consensus sequence for the multiple sequence alignment, and write it to
-		# the output file.
-		write_results(get_consensus(), header, str(item), len(otu_seq_dic[item]), out_path)
-		# remove the 'temp_align.txt' file
-		clean_up('temp_align.txt')
+	header, length = '', 0
+
+	# parse through the consensus sequence dictionary	
+	for seq in seq_dic:
+		if program == 'octupus': header = seq.replace('OCTU','')
+		elif program == 'usearch_old': header = seq.replace('Cluster','')
+		elif program == 'usearch': header = otu_seq_dic[1][seq.replace('centroid=','').split(';')[0]][0]
+		# write the sequence with some aditional information on the cluster size
+		if len(otu_seq_dic[0][header]) >= min_size:
+			write_results(seq_dic[seq], seq, header, len(otu_seq_dic[0][header]), out_path)
+	
+
+	#for item in otu_seq_dic:
+	#	header = item
+	#	# write the sequence with some aditional information on the cluster size
+	#	write_results(seq_dic[header], header, str(item), len(otu_seq_dic[item]), out_path)
+
 	
 def main ():
 	
 	# check which method needs to be used to retrieve the representative sequence
 	if args.s == 'random':
-		get_rand_seq(extract_seq(args.i), size_filt(args.c, args.m), args.o)
+		get_rand_seq(extract_seq(args.i), extract_otu(args.c), args.o, args.m)
 	elif args.s == 'consensus':
-		get_cons_seq(extract_seq(args.i), size_filt(args.c, args.m), False, args.o)
-	elif args.s == 'combined':
-		get_cons_seq(extract_seq(args.i), size_filt(args.c, args.m), args.r, args.o)	
+		get_cons_seq(extract_seq(args.i), extract_otu(args.c), args.o, args.p, args.m)	
 
 if __name__ == "__main__":
     main()

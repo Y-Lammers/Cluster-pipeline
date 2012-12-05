@@ -11,22 +11,25 @@ parser.add_argument('-i', metavar='fasta files', type=str,
 			help='enter the fasta file(s)', nargs='+')
 parser.add_argument('-o', metavar='output dir', type=str,
 			help='the directory in which the files will be placed (default: same folder as input files)', default='')			
-parser.add_argument('-m', metavar='min length', type=int,
+parser.add_argument('-l', metavar='min length', type=int,
+			help='filter sequences based on the minimum sequence length', default=0)
+parser.add_argument('-h', metavar='max length', type=int,
 			help='filter sequences based on the minimum sequence length', default=0)
 parser.add_argument('-d', metavar='remove duplicate', type=str,
 			help='remove duplicate sequences from the dataset (yes/no) default: no', default='no')
 args = parser.parse_args()
 
 # get sequence dictionary
-def get_seq (fasta_path, length, dup):
+def get_seq (fasta_path, min_length, max_length, dup):
 	# import modules for fasta sequence handling
 	from Bio import SeqIO
 	
-	seq_dic, used_dic = {}, {}
+	seq_dic, used_dic, temp_length = {}, {}, 0
 	# parse the fasta file
 	for seq in SeqIO.parse(fasta_path, 'fasta'):
+		if max_length = 0: temp_length = len(seq.seq)
 		# check if the sequence is longer then the threshold
-		if len(seq.seq) > length:
+		if len(seq.seq) > min_length and len(seq.seq) <= temp_length:
 			if dup != 'no':
 				# check if the sequence isn't a duplicate
 				if seq.seq not in used_dic:
@@ -53,7 +56,7 @@ def main ():
 	# filter each input file
 	
 	for fasta_file in args.i:
-		seq_dic = get_seq(fasta_file, args.m, args.d)
+		seq_dic = get_seq(fasta_file, args.l, args.h, args.d)
 		if args.o != '':
 			out_path = (args.o + '.'.join(fasta_file.split('/')[-1].split('.')[:-1]) + 
 					'_filtered.fasta')

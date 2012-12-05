@@ -17,8 +17,6 @@ parser.add_argument('-o', metavar='output file', type=str,
 			help='enter the output file')
 parser.add_argument('-r', metavar='reference file', type=str, 
 			help='enter the reference file on wich the blast database will be based')
-parser.add_argument('-u', metavar='UNITE db', type=str, 
-			help='UNITE databased used as reference (\'yes\' includes the taxonomic and accession numbers) yes / no (default" no)', default='no')			
 parser.add_argument('-a', metavar='accession codes', type=str,
 			help='Does the fasta reference contain accession codes in the header (indicated by \'|\'s) yes / no (default no)', default='no')
 args = parser.parse_args()
@@ -65,7 +63,7 @@ def clean_up (db_name, u, a):
 		cmd = 'rm ' + db_name + '.*'
 	p = call(cmd, shell = True)
 
-def parse_blast_result (csv_path, UNITE, fasta_path):
+def parse_blast_result (csv_path, fasta_path):
 	# parse the blast results to add headers and normalize the output so it is
 	# similar to the blast.py output.
 
@@ -77,10 +75,7 @@ def parse_blast_result (csv_path, UNITE, fasta_path):
 	
 	# write the header
 	csvfile = open(csv_path, 'w')
-	if UNITE != 'no':
-		csvfile.write('\t'.join(['Query','Sequence','Percentage matched','length match','mismatches','gaps','query start','query end','subject start','subject end','e-value','bitscore','accession', 'genus', 'species', 'taxonomy\n']))
-	else:
-		csvfile.write('\t'.join(['Query','Sequence','Percentage matched','length match','mismatches','gaps','query start','query end','subject start','subject end','e-value','bitscore\n']))
+	csvfile.write('\t'.join(['Query','Sequence','Percentage matched','length match','mismatches','gaps','query start','query end','subject start','subject end','e-value','bitscore\n']))
 	
 	# add quotes around the blast hit, to simplify the importation of the csv file into spreadsheat programs
 	for line in lines:
@@ -88,22 +83,7 @@ def parse_blast_result (csv_path, UNITE, fasta_path):
 		line[-10] = line[-10].replace('.', ',')
 		info = '\t'.join(line[-11:]).replace('\n', '')
 		blast = ','.join(line[:-(len(line)-1)])
-		if UNITE != 'no':
-			header = line[-11].split('_')
-			try:
-				if 'uncultured' in header[1]:
-					tax = '\t'.join([header[0], header[1].split('-')[1], header[1].split('-')[0], header[-1].replace('-', ' ')])
-				else:
-					tax = '\t'.join([header[0], header[1].split('-')[0], header[1].split('-')[1], header[-1].replace('-', ' ')])
-			except:
-				tax = '\t'.join(['','','',''])
-			csvfile.write(blast + '\t' + info + '\t' + tax + '\n')
-		else:
-			csvfile.write(blast + '\t' + info + '\n')
-		# if line[0] in seq_list: seq_list.del(line[0])
-	
-	# for item in seq_list:
-	#	csvfile.write(item + '\tno identification found\nr')
+		csvfile.write(blast + '\t' + info + '\n')
 		
 def scan_fasta_file (fasta_path):
 	# import modules for fasta sequence handling
@@ -120,16 +100,6 @@ def scan_fasta_file (fasta_path):
 	# replace the '|' signs that cause blastmakedb to crash, overwrite the old file
 	for seq in seq_list:
 		header = seq.description.split('|')
-		try:
-			while '' or '-' in header:
-				if '' in header: header.remove('')
-				if '-' in header: header.remove('-')
-			if ' ' in header[1]: header[1] = header[1].replace(' ','-')
-			else: header[1] += '-species'
-			if len(header) == 2: header.append('no-taxonomy')
-			else: header[2] = header[2].replace(' ','-')
-		except:
-			pass
 		SeqIO.write(SeqRecord(seq.seq, id='_'.join(header), description=''), out_file, 'fasta')
 
 	out_file.close()
@@ -140,7 +110,7 @@ def main ():
 	# make the blast database
 	ref_path = args.r
 
-	if args.u != 'no' or args.a != 'no':
+	if args.a != 'no':
 		ref_path = scan_fasta_file(args.r)
 	
 	path_dic = get_path()
@@ -154,7 +124,7 @@ def main ():
 	clean_up(ref_path, args.u, args.a)
 	
 	# process output
-	parse_blast_result(args.o, args.u, args.i)	
+	parse_blast_result(args.o, args.i)	
 
 		
 if __name__ == "__main__":
