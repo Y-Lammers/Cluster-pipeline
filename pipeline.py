@@ -90,20 +90,9 @@ def combine (fasta_files, file_name, out_dir):
 	
 	# catenate multiple fasta files into a single file for clustering
 	command = 'cat ' + ' '.join(fasta_files) + ' > ' + out_dir + file_name
-	#p = call(['cat'] + fasta_files + [('>' + out_dir + 'combined_fasta_file.fasta')])
 	p = call(command, shell=True)
 
 	return (out_dir + file_name)
-	
-def trim (pipe_path, fasta_file, reference_file, save, out_dir):
-	from subprocess import call
-	
-	out_file = out_dir + 'trimmed_sequences.fasta'
-	
-	# run the trim_sequence.py script
-	p = call(['python', (pipe_path + 'trim_sequence.py'), '-i', fasta_file, '-o', out_file, '-r', reference_file, '-s', save])
-
-	return out_file
 
 def cluster (pipe_path, fasta_file, similarity, program, out_dir, cores):
 	from subprocess import call

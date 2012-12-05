@@ -23,9 +23,7 @@ parser.add_argument('-c', metavar='cluster file', type=str,
 parser.add_argument('-m', metavar='minimal cluster size', type=int,
 			help='enter the minimal cluster size')
 parser.add_argument('-s', metavar='select method', type=str, 
-			help='the method used to select a representative sequence for a cluster: \'random\' (default), \'consensus\' or \'combined\', please note: using the consensus option on large cluster can take a lot of time and computer power to finnish, use \'combined\' when more speed is needed', default='random')
-parser.add_argument('-r', metavar='number of random sequences used for the consensus', type=int,
-			help='the number of random sequences that will be used to create a consensus sequence (select method: \'combined\' only', default=10)
+			help='the method used to select a representative sequence for a cluster: consensus or random (default consensus) * note the consensus option is not available for cd-hit or tgicl, it will automatically change to the random setting', default='consensus')
 parser.add_argument('-p', metavar='cluster program  used', type=str,
 			help='the program used for the cluster analysis')
 args = parser.parse_args()
@@ -41,7 +39,6 @@ def extract_otu (otufile):
 		# the OTU, if the number of header matches the size threshold
 		# the cluster is stored
 		array = line.replace('\n', '').split('\t')
-		#if len(array[1:]) >= minsize: 
 		otu_seq_dic[array[0]] = array[1:]
 		for header in array[1:]:
 			sequence_header_dic[header] = [array[0], len(array[1:])]
@@ -62,17 +59,6 @@ def extract_seq (seq_file):
 	
 	# return the dictonary containing the sequences from the list of input files
 	return seq_dic
-
-#def extract_consensus (seq_file, otu_seq_dic, program):
-#	# the SeqIO module is imported from Biopython to parse the fasta file
-#	from Bio import SeqIO
-#
-#	seq_dic, header = {}, ''
-#
-#	# parse through the consensus file
-#	for seq_record in SeqIO.parse(seq_file[0], 'fasta'):
-#		if program == 'usearch': header = seq_record.id.replace('Cluster')
-#		elif program == 'usearch_old': header = seq_record.id.replace('Cluster')
 
 def write_results (sequence, header, cluster, clust_length, out_path):
 	# import a set of Biopython modules for sequence handling and writing
@@ -106,21 +92,21 @@ def get_cons_seq (seq_dic, otu_seq_dic, out_path, program, min_size):
 
 	# parse through the consensus sequence dictionary	
 	for seq in seq_dic:
+
+		# based on the used cluster program, retrieve the correct cluster number from the 
+		# consensus file
 		if program == 'octupus': header = seq.replace('OCTU','')
 		elif program == 'usearch_old': header = seq.replace('Cluster','')
 		elif program == 'usearch': header = otu_seq_dic[1][seq.replace('centroid=','').split(';')[0]][0]
+		
 		# write the sequence with some aditional information on the cluster size
 		if len(otu_seq_dic[0][header]) >= min_size:
 			write_results(seq_dic[seq], seq, header, len(otu_seq_dic[0][header]), out_path)
-	
-
-	#for item in otu_seq_dic:
-	#	header = item
-	#	# write the sequence with some aditional information on the cluster size
-	#	write_results(seq_dic[header], header, str(item), len(otu_seq_dic[item]), out_path)
 
 	
 def main ():
+	# change the cluster setting to random when the cd-hit or tgicl program is used for clustering
+	if args.p == 'tgicl' or args.p == 'cdhit': args.s = 'random'
 	
 	# check which method needs to be used to retrieve the representative sequence
 	if args.s == 'random':

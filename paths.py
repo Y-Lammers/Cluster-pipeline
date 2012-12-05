@@ -38,7 +38,7 @@ def main ():
 		path_file = open(sys.argv[1] + 'paths.txt', 'w')
 		
 		# look for the program and save the results
-		for path in ['muscle', 'usearch', 'cd-hit', 'uclust', 'makeblastdb', 'blastn', 'tgicl', 'octu.pl']:
+		for path in ['usearch', 'cd-hit', 'uclust', 'makeblastdb', 'blastn', 'tgicl', 'octu.pl']:
 			filepath = search(path)
 			if path == 'octu.pl': path = 'octupus'
 			path_file.write(path + '\t' + filepath + '\n')
