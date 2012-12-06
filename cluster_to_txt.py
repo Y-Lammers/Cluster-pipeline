@@ -102,7 +102,7 @@ def write_output (cluster_dic, output_file):
 		
 def main ():
 	
-	if args.p == 'uclust' or args.p == 'usearch':
+	if args.p == 'usearch_old' or args.p == 'usearch':
 		# get the uc file and save it in the .txt format
 		write_output(get_uc_cluster(args.c), args.o)
 	
