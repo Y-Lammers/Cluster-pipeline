@@ -197,7 +197,7 @@ def main ():
 		input_files = temp
 		
 	# check if there are multiple files that might need tagging
-	if len(input_files) > 1 or args.pipeline == 'cluster' or args.pipeline == 'merge':
+	if args.pipeline == 'cluster':
 		print('Tagging input files')
 		taged_files = tag(pipe_path, input_files, output_dir)
 		print('Merging tagged files')
