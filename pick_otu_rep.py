@@ -96,8 +96,10 @@ def get_cons_seq (seq_dic, otu_seq_dic, out_path, program, min_size):
 		# based on the used cluster program, retrieve the correct cluster number from the 
 		# consensus file
 		if program == 'octupus': header = seq.replace('OCTU','')
-		elif program == 'usearch_old': header = seq.replace('Cluster','')
-		elif program == 'usearch': header = otu_seq_dic[1][seq.replace('centroid=','').split(';')[0]][0]
+		elif program == 'usearch_old': 
+			header = str(int(seq.replace('Cluster',''))+1)
+		elif program == 'usearch': 
+			header = str(int(otu_seq_dic[1][seq.replace('centroid=','').split(';')[0]][0])+1)
 		
 		# write the sequence with some aditional information on the cluster size
 		if len(otu_seq_dic[0][header]) >= min_size:
