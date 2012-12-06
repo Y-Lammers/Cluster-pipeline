@@ -4,6 +4,16 @@ A pipeline for clustering and identifying barcode sequences from a next-generati
 sequencer such as Roche 454 or the Ion Torrent.
 
 
+Basic usage:
+
+pipeline.py --input_file [fasta_files] --outdir_dir [results_directory]
+
+By default the input files will be clustered with octupus (if present) and the non-singleton
+clusters will be identified by blasting them against the NCBI nucleotide database.
+
+For a complete list of commands and options see the manuals or the help under pipeline.py -h
+
+
 Scripts:
 
 This project contains the following scripts:
