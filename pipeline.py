@@ -16,10 +16,10 @@ parser.add_argument('--output_dir', metavar='output directory', type=str,
 			help='Enter the output directory (full path)')
 parser.add_argument('--pipeline', metavar='pipeline', type=str, 
 			help='The way the 454 reads will be processed (only relevant if multiple input files are used): merge (input files are merged in a single file) / cluster (input files are tagged and clustered together, bassed on tags the origin of reads in clusters can be traced) / test (run the cluster step and write the cluster info to a output file without identifications) (default: merge)', default='merge')
-parser.add_argument('--filter', metavar='filter sequences', type=str,
-			help='Filter the sequences based on length or duplicates (yes / no) default: no', default='no')
-parser.add_argument('--length', metavar='minimum length', type=int,
+parser.add_argument('--min_length', metavar='minimum length', type=int,
 			help='Filter out sequences smaller then the minimum length', default=0)
+parser.add_argument('--max_length', metavar='maximum length', type=int,
+			help='Filter out sequences larger then the maximum length', default=0)
 parser.add_argument('--duplicate', metavar='remove duplicates', type=str,
 			help='Remove duplicate sequences from the dataset (yes / no) default: no', default='no')
 parser.add_argument('--program', metavar='cluster program', type=str, 
@@ -39,7 +39,7 @@ parser.add_argument('--blast_length', metavar='minimum blast length', type=int,
 parser.add_argument('--pick_rep', metavar='otu sequence picking', type=str, 
 			help='Method how the OTU representative sequence will be picked: random / consensus (default: consensus) *note* consensus mode is not supported by cd-hit and tgicl clustering, these settings will automatically select the random mode', default='consensus')
 parser.add_argument('--min_size', metavar='minimum OTU size', type=int, 
-			help='minimum size for an OTU to be analyzed (default: 10)', default=10)
+			help='minimum size for an OTU to be analyzed (default: 2)', default=2)
 parser.add_argument('--cores', metavar='# cpu cores for tgicl', type=int,
 			help='number of processors used for the tgicl cluster analysis (default: 1)', default=1)
 args = parser.parse_args()
@@ -67,11 +67,11 @@ def get_program_path (pipe_path):
 	
 	path = call(['python', (pipe_path + 'paths.py'), pipe_path])
 
-def filter_seq (pipe_path, fasta_files, length, duplicate, out_dir):
+def filter_seq (pipe_path, fasta_files, min_length, max_length, duplicate, out_dir):
 	from subprocess import Popen, PIPE	
 
 	# tag the input files
-	filt = Popen(['python', (pipe_path + 'filter.py'), '-i'] + fasta_files + ['-o', out_dir, '-d', duplicate, '-m', str(length)], stdout=PIPE)
+	filt = Popen(['python', (pipe_path + 'filter.py'), '-i'] + fasta_files + ['-o', out_dir, '-d', duplicate, '-l', str(min_length), '-h', str(max_length)], stdout=PIPE)
 	filter_files = filt.communicate()[0].split('\n')[:-1]
 
 	return filter_files
@@ -192,8 +192,8 @@ def main ():
 	input_files = args.input_file
 	
 	# check if the inputfiles need filtering
-	if args.filter == 'yes':
-		temp = filter_seq(pipe_path, input_files, args.length, args.duplicate, output_dir)
+	if args.min_length != 0 or args.max_length != 0 or args.duplicate != 'no':
+		temp = filter_seq(pipe_path, input_files, args.min_length, args.max_length, args.duplicate, output_dir)
 		input_files = temp
 		
 	# check if there are multiple files that might need tagging

@@ -1,0 +1,8 @@
+muscle	/usr/bin/muscle
+usearch	/home/youri/Downloads/usearch6.0.307_i86linux32
+cd-hit	/home/youri/Cluster-pipeline/cd-hit-v4.5.4-2011-03-07/cd-hit
+uclust	no path found
+makeblastdb	/usr/bin/makeblastdb
+blastn	/usr/bin/blastn
+tgicl	/usr/bin/tgicl
+octupus	/media/Storage/Downloads/OCTU_bin/octu.pl
