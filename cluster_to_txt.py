@@ -58,11 +58,10 @@ def get_octupus_cluster (cluster_file):
 		line = line.replace('\n','')
 		if '*' in line:
 			cluster = int(line.replace('*octu',''))
+			cluster_dic[cluster] = []
 		if '>' in line:
-			try:
-				cluster_dic[cluster].append(line[1:])
-			except:
-				cluster_dic[cluster] = [line[1:]]
+			cluster_dic[cluster] += [line[1:].replace('\r','')]
+
 	return cluster_dic			
 
 def get_tgicl_cluster (cluster_file):
