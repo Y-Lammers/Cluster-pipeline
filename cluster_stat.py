@@ -59,5 +59,5 @@ def main ():
 	write_results(parse_otu(args.c), args.c, args.t, args.o)	
 
 if __name__ == "__main__":
-    main()
+	main()
 

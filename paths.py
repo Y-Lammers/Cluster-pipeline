@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # The paths.py script searches for the filepaths of the programs
 # that will be used by this pipeline, the filepaths will be saved to
 # the paths.txt file and can be manually edited if needed.

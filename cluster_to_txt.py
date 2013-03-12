@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # This script converts the output files cluster programs such as uclust
 # cd hit to a generalized output format that is also compatible with the
 # QIIME pipeline.

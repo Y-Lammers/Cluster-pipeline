@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # The cluster.py script takes the input sequence file and clusters settings
 # and runs the cluster program of choice
 
