@@ -1,10 +1,8 @@
-# The pick_otu_rep.py script creates a representative sequence for a cluster of
-# sequences. It can pick a sequence based on three different methods: 'random',
-# a random sequence will be picked as the representative sequence, 'consensus',
-# the representative sequence is based on the consensus sequence for the cluster
-# and 'combined' wich takes an x number of random sequences from a cluster and
-# creates a consensus sequence for these ('combined' helps to deal with large
-# clusters, since a full sequence alignment will greatly slow the script down).
+#!/usr/bin/env python
+
+# Pick a representative sequence for the clusters, this
+# can either be a consensus sequence (if supported by the
+# cluster program) or a random sequence from the cluster
 
 
 # import the argparse module to handle the input commands

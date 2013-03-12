@@ -35,7 +35,6 @@ def main ():
 	# check if there is already a paths.txt file present, if yes skip the search
 	try:
 		path_file = open(sys.argv[1] + 'paths.txt', 'r')
-		pass
 	except:
 		path_file = open(sys.argv[1] + 'paths.txt', 'w')
 		

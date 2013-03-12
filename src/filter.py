@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
-# This script can parse and filter fasta input files (filter by length) or
-# remove duplicate sequences
+# This script reads a fasta input file and will
+# filter out all sequences above or below a certain 
+# threshold length
 
 # import the argparse module to handle the input commands
 import argparse

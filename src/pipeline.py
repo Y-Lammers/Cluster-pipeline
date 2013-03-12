@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 
 # The pipeline.py script takes the user input and controls the various subscripts
-# and programs such as blast+ and muscle.
-
+# and programs such as blast+ and the cluster programs used
 
 # import the argparse module to handle the input commands
 import argparse, sys
@@ -75,6 +74,8 @@ def check_dir (out_dir):
 def get_program_path (pipe_path):
 	from subprocess import call
 	
+	# run the paths.py script to retrieve all paths
+	# for the programs the pipeline uses
 	path = call([(pipe_path + 'paths.py'), pipe_path])
 
 
@@ -209,7 +210,7 @@ def main ():
 		print('Merging tagged files')
 		input_files = [combine(input_files, 'combined_fasta_file.fasta', output_dir)]
 	
-	blast_files = []
+	blast_files = [] # create an empty list for the paths to the blast results
 
 	# walk through the list of fasta files (only one when merged)
 	# and cluster the sequences, identify the results, et cetera

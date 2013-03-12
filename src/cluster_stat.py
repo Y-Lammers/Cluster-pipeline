@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # The cluster_stat.py script goes through the cluster output files
 # and gathers information about the clusterings such as the number
 # of clusters, size of the clusters and number of used sequences.
@@ -19,16 +21,16 @@ parser.add_argument('-o', metavar='output file', type=str,
 
 args = parser.parse_args()
 
-def parse_otu (otufile):
+def parse_otu ():
 	# Parse through the OTU file to get the information
 	
 	otu_seq_dic, sequences, otu_size_dic = {}, 0, {}
 
 	# parse through the OTU file
-	for line in open(otufile, 'r'):
+	for line in open(args.c, 'r'):
 		# split each OTU into a set of fasta headers that make up
 		# each OTU
-		array = line.replace('\n', '').split('\t')
+		array = line.strip().split('\t')
 		otu_seq_dic[array[0]] = array[1:]
 		sequences += len(array[1:])
 		try:
@@ -38,15 +40,15 @@ def parse_otu (otufile):
 	
 	return [otu_seq_dic, sequences, otu_size_dic]
 	
-def write_results (otu_info_list, otufile, time, outfile):
+def write_results (otu_info_list):
 	# get the results and write them to the output file
 	
 	# open the output file
-	outcsv = open(outfile, 'w')
+	outcsv = open(args.o, 'w')
 	
 	# write basic stats
-	outcsv.write(otufile + '\nNumber of sequences\t' + str(otu_info_list[1]) + '\nNumber of clusters\t' + 
-			str(len(otu_info_list[0])) + '\nCluster time\t' + time + '\nSize of cluster\tnumber of clusters for size\n')
+	outcsv.write(args.c + '\nNumber of sequences\t' + str(otu_info_list[1]) + '\nNumber of clusters\t' + 
+			str(len(otu_info_list[0])) + '\nCluster time\t' + args.t + '\nSize of cluster\tnumber of clusters for size\n')
 	
 	# for each cluster size, print the results
 	for size in sorted(otu_info_list[2].iterkeys()):
@@ -56,7 +58,7 @@ def write_results (otu_info_list, otufile, time, outfile):
 	
 def main ():
 	
-	write_results(parse_otu(args.c), args.c, args.t, args.o)	
+	write_results(parse_otu())	
 
 if __name__ == "__main__":
 	main()

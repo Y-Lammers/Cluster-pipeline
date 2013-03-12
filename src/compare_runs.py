@@ -43,13 +43,20 @@ def append_dic(blast_dic, dic_key, blast_info, blast_file):
 	# dic with the info for each blast file
 
 	# the number of sequences in the cluster for the blasted sequence
-	seq_number = blast_info[0].split('length_cluster:')[1][:-1]
+	seq_number = int(blast_info[0].split('length_cluster:')[1][:-1])
 
-	try:
-		blast_dic[dic_key][blast_file] = [['\"' + blast_info[1] + '\"'] + blast_info[7:9], seq_number]
-	except:
-		blast_dic[dic_key] = {blast_file: [['\"' + blast_info[1] + '\"'] + blast_info[7:9], seq_number]}
+	# temp_info contains the blast hit + species and taxonomy information
+	temp_info = ['\"' + blast_info[1] + '\"'] + blast_info[7:9]
 
+	# if the blasted file isnt present in the dic for said key: add it
+	if blast_file not in blast_dic[dic_key]:
+		blast_dic[dic_key] = {blast_file: [temp_info, seq_number]}
+	
+	# if the blast file IS present add the number of clusters
+	else:
+		blast+_dic[dic_key][blast_file][1] += seq_number
+	
+	# return the updated dictionary	
 	return blast_dic
 	
 
@@ -67,15 +74,12 @@ def split_blast_line (line):
 	# split the remaining entries based on the comma, and return this list	
 	return comma_split[1::2] + comma_split[4].split(',')[1:]
 
-def blast (line):
-	line = line.split('\"')
-	print line[2]
-
-def species (line):
-	pass
 
 def parse_results (blast_dic):
-	
+
+	# For each blast hit the general info is obtained (blast hit + species)
+	# and the number of sequences in the clusters that match this hit
+		
 	for hit in blast_dic:
 		temp_result = []
 		for item in blast_dic[hit]:
@@ -83,9 +87,11 @@ def parse_results (blast_dic):
 			break
 		for item in args.b:
 			if item in blast_dic[hit]:
-				temp_result.append(blast_dic[hit][item][1])
+				temp_result.append(str(blast_dic[hit][item][1]))
 			else:
 				temp_result.append('0')
+
+		# append the results for the hit to the output file
 		write_results(','.join(temp_result), 'a')
 
 

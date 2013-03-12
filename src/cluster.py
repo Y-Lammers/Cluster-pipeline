@@ -38,13 +38,13 @@ def command (cmd):
 	#clean up database files with the 'rm' command
 	p = call(cmd, shell = True)
 	
-def run_usearch (usearch, sequence_file, similarity, output_file):
+def run_usearch (usearch):
 	# import module that allows the usearch tool to be run
 	from subprocess import call
 
-	p = call([usearch, '-cluster_fast', sequence_file, '-id', similarity, '-uc', output_file, '-consout', output_file + '_cons'])
+	p = call([usearch, '-cluster_fast', args.i, '-id', args.s, '-uc', args.o, '-consout', args.o + '_cons'])
 
-def run_usearch_old (usearch, sequence_file, similarity, output_file):
+def run_usearch_old (usearch):
 	# import module that allows the usearch tool to be run
 	from subprocess import call
 	from Bio import SeqIO
@@ -53,24 +53,24 @@ def run_usearch_old (usearch, sequence_file, similarity, output_file):
 
 	# remove N characters that can interfere with the -consout flag in usearch
 
-	seq_dic = SeqIO.index(sequence_file, "fasta")
-	out_file = open(sequence_file + '.sorted', 'w')
+	seq_dic = SeqIO.index(args.i, "fasta")
+	out_file = open(args.i + '.sorted', 'w')
 	for item in seq_dic:
 		temp = seq_dic[item]
 		temp = SeqRecord(Seq(str(temp.seq).replace('N','')), id=temp.id, description='')
 		SeqIO.write(temp, out_file, "fasta")
 	out_file.close()
 	
-	p = call([usearch, '-sort', sequence_file + '.sorted', '-output', sequence_file + '.sorted'])
-	p = call([usearch, '-cluster', sequence_file + '.sorted', '-uc', output_file, '-id', similarity, '-consout', output_file + '_cons'])
-	command('rm ' + sequence_file + '.sorted')
+	p = call([usearch, '-sort', args.i + '.sorted', '-output', args.i + '.sorted'])
+	p = call([usearch, '-cluster', args.i + '.sorted', '-uc', args.o, '-id', args.s, '-consout', args.o + '_cons'])
+	command('rm ' + args.i + '.sorted')
 
-def run_tgicl (tgicl, sequence_file, similarity, output_dir, proc):
+def run_tgicl (tgicl, output_dir):
 	# import module that allows the tgicl tool to be run
 	from subprocess import call
 
 	# run the tgicl program
-	p = call([tgicl, '-F', sequence_file, '-p', similarity, '-c', str(proc)])
+	p = call([tgicl, '-F', args.i, '-p', args.s, '-c', str(args.c)])
 
 	# set the correct output directory (by default the desired files remain in the directory
 	# where the tgicl cluster program is runned
@@ -89,7 +89,7 @@ def run_tgicl (tgicl, sequence_file, similarity, output_dir, proc):
 	for cmd in cmd_list:
 		command(cmd)
 
-def run_octupus (octu, sequence_file, similarity, output_dir):
+def run_octupus (octu, similarity, output_dir):
 	# import module that allows the octupus tool to be run
 	from subprocess import call
 	
@@ -103,7 +103,7 @@ def run_octupus (octu, sequence_file, similarity, output_dir):
 	if output_dir[-1] != '/': output_dir = '/'.join(output_dir.split('/')[:-1]) + '/'
 
 	# run the octupus cluster program
-	p = call([octu, sequence_file, similarity, '0', output_dir])
+	p = call([octu, args.i, similarity, '0', output_dir])
 
 	# rename the octupus cluster file so it can be used by the other scripts downstream
 	cmd_list = ['mv \"' + output_dir + 'octuall.seq\" \"' + output_dir + 'clustered\"', 
@@ -112,12 +112,12 @@ def run_octupus (octu, sequence_file, similarity, output_dir):
 		p = call(cmd, shell = True)
 
 
-def run_cdhit (cdhit, sequence_file, similarity, output_file):
+def run_cdhit (cdhit):
 	# import module that allows the cdhit tool to be run
 	from subprocess import call
 	
 	#p = call([cdhit, '-i', ('\"' + sequence_file + '\"'), '-o',  output_file, '-c', similarity, '-d', '0'])
-	p = call([cdhit, '-i', sequence_file, '-o',  output_file, '-c', similarity, '-d', '0'])
+	p = call([cdhit, '-i', args.i, '-o',  args.o, '-c', args.s, '-d', '0'])
 	
 def main ():
 	
@@ -125,15 +125,15 @@ def main ():
 	paths = get_path()
 	
 	if args.p == 'usearch':
-		run_usearch(paths['usearch'], args.i, args.s, args.o)
+		run_usearch(paths['usearch'])
 	if args.p == 'usearch_old':
-		run_usearch_old(paths['usearch'], args.i, args.s, args.o)
+		run_usearch_old(paths['usearch'])
 	elif args.p == 'cdhit':
-		run_cdhit(paths['cd-hit'], args.i, args.s, args.o)
+		run_cdhit(paths['cd-hit'])
 	elif args.p == 'tgicl':
-		run_tgicl(paths['tgicl'], args.i, args.s, args.o, args.c)
+		run_tgicl(paths['tgicl'], args.o)
 	elif args.p == 'octupus':
-		run_octupus(paths['octupus'], args.i, args.s, args.o)
+		run_octupus(paths['octupus'], args.s, args.o)
 		
 if __name__ == "__main__":
     main()

@@ -116,7 +116,8 @@ def parse_blast_align (sequences, thread, mode):
 				filter_hits([('\"' + blast_result.query + '\"'), ('\"' + alignment.title + '\"'), gb_num, str(identity),
 						str(blast_result.query_length), str(hsp.expect), str(hsp.bits)], mode, thread, count)
 				count += 1
-	
+
+
 def filter_hits (blast, mode, thread, count):
 	
 	# filter the blast hits, based on the minimum
@@ -173,6 +174,7 @@ def parse_seq_file ():
 				if p[0].is_alive() == False: 
 					p[0].join()
 					procs.remove(p)
+				# time-out after 30 minutes
 				elif time.time() - p[1] > 10800:
 					p[0].terminate()
 					procs.remove(p)
@@ -185,6 +187,7 @@ def main ():
 	header = 'query,hit,accession,identity,hit length,e-value,bit-score,taxon id,species,taxonomy'
 	write_results(header, 'w')
 
+	# Blast the sequences	
 	parse_seq_file()
 
 

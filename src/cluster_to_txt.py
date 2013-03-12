@@ -23,7 +23,7 @@ def get_uc_cluster (cluster_file):
 	cluster_dic = {}
 
 	for line in open(cluster_file, 'r'):
-		line = line.replace('\n','').split('\t')
+		line = line.strip().split('\t')
 		# get the seeds and sequences who match these seeds
 		if line[0] == 'S':
 			cluster_dic[int(line[1])+1] = [line[8]]
@@ -38,7 +38,7 @@ def get_cd_cluster (cluster_file):
 	cluster_dic, cluster = {}, 0
 	
 	for line in open(cluster_file + '.clstr', 'r'):
-		line = line.replace('\n','')
+		line = line.strip()
 		# get the cluster number if a new cluster starts
 		if line[0] == '>':
 			cluster = int(line.split(' ')[1])+1
@@ -57,7 +57,7 @@ def get_octupus_cluster (cluster_file):
 	cluster_dic, cluster = {}, 0
 
 	for line in open(cluster_file, 'r'):
-		line = line.replace('\n','')
+		line = line.strip()
 		if '*' in line:
 			cluster = int(line.replace('*octu',''))
 			cluster_dic[cluster] = []
@@ -73,7 +73,7 @@ def get_tgicl_cluster (cluster_file):
 
 	# parse the (non-singleton) cluster file and add the clusters to the dictionary
 	for line in open(cluster_file + '_cl_clusters', 'r'):
-		line = line.replace('\n','').split('\t')
+		line = line.strip().split('\t')
 		if '>' in line[0]:
 			cluster = int(line[0][3:])
 		else:
@@ -83,7 +83,7 @@ def get_tgicl_cluster (cluster_file):
 
 	# parse the singleton cluster file and add the singletons to the dictionary
 	for line in open(cluster_file + '.singletons', 'r'):
-		cluster_dic[cluster] = [line.replace('\n','')]
+		cluster_dic[cluster] = [line.strip()]
 		cluster += 1
 	
 	return cluster_dic	
