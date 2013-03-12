@@ -23,18 +23,30 @@ def read_blast ():
 	# the blast information for each file. The info is stored
 	# in a dictionary and the keys are either the raw blast hits
 	# or the species for the blast hit
-	blast_dic = {}
+	import os
+
+	blast_dic, blast_list = {}, []
 
 	for blast_file in args.b:
+		
+		# grap the blast file name without path
+		dir, temp_file = os.path.split(blast_file)
+		blast_list.append(temp_file) # append to the file
+
+		# parse through the file and obtain the blast info
 		for line in open(blast_file, 'r'):
 			if 'query,hit' not in line:
 				blast_info = split_blast_line(line)			
 				if args.m == 'blast':
-					blast_dic = append_dic(blast_dic, blast_info[1], blast_info, blast_file)
+					blast_dic = append_dic(blast_dic, blast_info[1], blast_info, temp_file)
 				else:
-					blast_dic = append_dic(blast_dic, blast_info[7], blast_info, blast_file)
-	
-	return blast_dic
+					try:
+						blast_dic = append_dic(blast_dic, blast_info[7], blast_info, temp_file)
+					except:
+						blast_dic = append_dic(blast_dic, blast_info[1], blast_info, temp_file)
+
+	# return both the blast information and the blast files
+	return [blast_dic, blast_list]
 
 def append_dic(blast_dic, dic_key, blast_info, blast_file):
 	
@@ -46,16 +58,21 @@ def append_dic(blast_dic, dic_key, blast_info, blast_file):
 	seq_number = int(blast_info[0].split('length_cluster:')[1][:-1])
 
 	# temp_info contains the blast hit + species and taxonomy information
-	temp_info = ['\"' + blast_info[1] + '\"'] + blast_info[7:9]
+	try:
+		temp_info = ['\"' + blast_info[1] + '\"'] + blast_info[7:9]
+	except:
+		temp_info = ['\"' + blast_info[1] + '\"']
 
-	# if the blasted file isnt present in the dic for said key: add it
-	if blast_file not in blast_dic[dic_key]:
+	# if the blast key is not present in the dic: add it 
+	if dic_key not in blast_dic:
 		blast_dic[dic_key] = {blast_file: [temp_info, seq_number]}
-	
-	# if the blast file IS present add the number of clusters
-	else:
-		blast+_dic[dic_key][blast_file][1] += seq_number
-	
+	else:	
+		# try to add the seq number, if not possible: create a new record
+		try:
+			blast_dic[dic_key][blast_file][1] += seq_number
+		except:
+			blast_dic[dic_key][blast_file] = [temp_info, seq_number]		
+
 	# return the updated dictionary	
 	return blast_dic
 	
@@ -75,17 +92,18 @@ def split_blast_line (line):
 	return comma_split[1::2] + comma_split[4].split(',')[1:]
 
 
-def parse_results (blast_dic):
+def parse_results (blast_results):
 
 	# For each blast hit the general info is obtained (blast hit + species)
 	# and the number of sequences in the clusters that match this hit
-		
+	blast_dic, blast_list = blast_results[0], blast_results[1]	
+	
 	for hit in blast_dic:
 		temp_result = []
 		for item in blast_dic[hit]:
 			temp_result += blast_dic[hit][item][0]
 			break
-		for item in args.b:
+		for item in blast_list:
 			if item in blast_dic[hit]:
 				temp_result.append(str(blast_dic[hit][item][1]))
 			else:

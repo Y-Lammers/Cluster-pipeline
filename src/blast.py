@@ -184,7 +184,7 @@ def parse_seq_file ():
 def main ():
 	# create a blank result file and write the header
 	#header = 'query,hit,accession,identity,hit length,e-value,bit-score,taxon id,genbank record species,CITES species,CITES info,NCBI Taxonomy name,appendix'
-	header = 'query,hit,accession,identity,hit length,e-value,bit-score,taxon id,species,taxonomy'
+	header = 'query,hit,accession,identity,hit length,e-value,bit-score,species,taxonomy'
 	write_results(header, 'w')
 
 	# Blast the sequences	

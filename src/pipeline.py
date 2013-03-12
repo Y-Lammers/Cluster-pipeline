@@ -80,10 +80,10 @@ def get_program_path (pipe_path):
 
 
 def filter_seq (pipe_path, fasta_files):
-	from subprocess import Popen, PIPE	
+	from subprocess import Popen, PIPE
 
 	# tag the input files
-	filt = Popen([(pipe_path + 'filter.py'), '-i'] + fasta_files + ['-l', str(args.min_length), '-h', str(args.max_length)], stdout=PIPE)
+	filt = Popen([(pipe_path + 'filter.py'), '-i'] + fasta_files + ['-min', str(args.min_length), '-max', str(args.max_length)], stdout=PIPE)
 	filter_files = filt.communicate()[0].split('\n')[:-1]
 
 	return filter_files
@@ -146,11 +146,10 @@ def pick_rep_seq (pipe_path, fasta_file, cluster_file, out_dir):
 	return output_file
 
 
-def genbank_blast (pipe_path, fasta_file, out_dir):
+def genbank_blast (pipe_path, fasta_file, output_file):
 	from subprocess import call
-	
-	# blast the sequences against the genbank database with the blast.py script
-	output_file = out_dir + 'blast_result.csv'
+
+	# blast the sequences against the genbank database with the blast.py script	
 	if args.mb == True:
 		p = call([(pipe_path + 'blast.py'), '-i', fasta_file, '-o', output_file, '-ba', args.ba, '-bd', args.bd, '-mb', '-mi', args.mi, '-mc', args.mc, '-me', args.me])
 	else:
@@ -158,7 +157,7 @@ def genbank_blast (pipe_path, fasta_file, out_dir):
 	return output_file
 
 
-def local_blast (pipe_path, fasta_file, reference, out_dir):
+def local_blast (pipe_path, fasta_file, reference, output_file):
 	from subprocess import call
 	
 	# blast the sequences against a local blast database with the custom_blast_db.py script
@@ -202,9 +201,10 @@ def main ():
 	
 	# check if the inputfiles need filtering
 	if args.min_length != 0 or args.max_length != 0:
+		print('Filtering input files')		
 		temp = filter_seq(pipe_path, input_files)
 		input_files = temp
-		
+
 	# check if there are multiple files that might need tagging
 	if args.p == 'merge':
 		print('Merging tagged files')
@@ -234,8 +234,9 @@ def main ():
 		
 		# identify the clusters
 		print('Identifying clusters')
+		output_file = rep_seq.replace('_rep.fasta', '_blast.csv') # set output_file
 		if args.b == 'genbank':
-			iden_file = genbank_blast(pipe_path, rep_seq, output_dir)
+			iden_file = genbank_blast(pipe_path, rep_seq, output_file)
 		else: 
 			# check if there are multiple reference files
 			if len(args.reference) > 1:
@@ -243,11 +244,9 @@ def main ():
 				reference = combine(args.reference, 'combined_reference_file.txt', output_dir)
 			else:
 				reference = args.reference[0]
-			iden_file = local_blast(pipe_path, rep_seq, reference, output_dir)
-
-			
+			iden_file = local_blast(pipe_path, rep_seq, reference, output_file)
 		blast_files.append(iden_file)
-				
+
 	# combine cluster and identification files (only when multiple fasta files are used
 	# and the --pipeline parameter is set to cluster
 	if args.p == 'cluster': 
