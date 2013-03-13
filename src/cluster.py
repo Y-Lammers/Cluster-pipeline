@@ -92,6 +92,7 @@ def run_tgicl (tgicl, output_dir):
 def run_octupus (octu, similarity, output_dir):
 	# import module that allows the octupus tool to be run
 	from subprocess import call
+	import os
 	
 	run_directory = '/'.join(sys.argv[0].split('/')[:-1]) + '/'
 
@@ -106,8 +107,13 @@ def run_octupus (octu, similarity, output_dir):
 	p = call([octu, args.i, similarity, '0', output_dir])
 
 	# rename the octupus cluster file so it can be used by the other scripts downstream
-	cmd_list = ['mv \"' + output_dir + 'octuall.seq\" \"' + output_dir + 'clustered\"', 
-			'rm ' + run_directory + '*.log']
+	cmd_list = ['mv \"' + output_dir + 'octuall.seq\" \"' + output_dir + 'clustered\"']
+	
+	for (paths, dirs, files) in os.walk('/'):
+		for file in files:
+			if 'formatdb.log' in file:
+				os.remove(os.path.join(paths, file))
+
 	for cmd in cmd_list:
 		p = call(cmd, shell = True)
 
