@@ -225,13 +225,13 @@ def main ():
 		# get the cluster information
 		cluster_stat(pipe_path, cluster_file, time.strftime('%H:%M:%S', time.gmtime(int(time.time() - time1))), output_dir)
 		
-		# continue with the analysis or stop if the pipeline was only used for testing
-		if args.p == 'test': continue
-		
 		# pick representative sequence for each cluster
 		print('Picking representative sequences for clusters')
 		rep_seq = pick_rep_seq(pipe_path, fasta_file, cluster_file, output_dir)
 		
+		# continue with the analysis or stop if the pipeline was only used for testing
+		if args.p == 'test': continue
+
 		# identify the clusters
 		print('Identifying clusters')
 		output_file = rep_seq.replace('_rep.fasta', '_blast.csv') # set output_file

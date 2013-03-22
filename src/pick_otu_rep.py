@@ -68,6 +68,7 @@ def write_results (sequence, header, cluster, clust_length):
 	SeqIO.write(seq, out_file, 'fasta')
 	out_file.close()
 
+
 def get_rand_seq (seq_dic, otu_seq_dic):
 	from random import choice
 
