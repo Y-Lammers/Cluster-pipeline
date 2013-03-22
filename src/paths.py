@@ -15,7 +15,7 @@ def search(program):
 	file_list = []
 	for (paths, dirs, files) in os.walk('/'):
 	    for file in files:
-        	if program == file.split('/')[-1][:len(program)]:
+		if program == file.split('/')[-1][:len(program)]:
         	    file_list.append(os.path.join(paths, file))
 
 	file_list.sort(key = len)
