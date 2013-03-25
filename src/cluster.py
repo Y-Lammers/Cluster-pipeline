@@ -68,6 +68,7 @@ def run_usearch_old (usearch):
 def run_tgicl (tgicl, output_dir):
 	# import module that allows the tgicl tool to be run
 	from subprocess import call
+	import os
 
 	# run the tgicl program
 	p = call([tgicl, '-F', args.i, '-p', args.s, '-c', str(args.c)])
@@ -76,16 +77,15 @@ def run_tgicl (tgicl, output_dir):
 	# where the tgicl cluster program is runned
 	if output_dir[-1] != '/': output_dir = '/'.join(output_dir.split('/')[:-1]) + '/'
 
-
-	run_directory = '/'.join(sys.argv[0].split('/')[:-1]) + '/'
+	run_directory = os.path.join(os.path.split(args.i)[0]) + '/'
 
 	# a list of command that will move and remove all cluster files created by tgicl
 	cmd_list = ['mv ' + run_directory + '*_cl_clusters ' + output_dir + 'clustered_cl_clusters',
 			'mv ' + run_directory + '*.singletons ' + output_dir + 'clustered.singletons',
-			'rm ' + sequence_file + '.*', 'rm ' + run_directory + 'masked.lst',
+			'rm ' + args.i + '.*', 'rm ' + run_directory + 'masked.lst',
 			'rm ' + run_directory + '*tgicl*', 'rm ' + run_directory + '*.log', 'rm ' + run_directory + '*_cl_*',
 			'rm -rf ' + run_directory + 'asm_*']
-
+	
 	for cmd in cmd_list:
 		command(cmd)
 
@@ -94,17 +94,23 @@ def run_octupus (octu, similarity, output_dir):
 	from subprocess import call
 	import os
 	
-	run_directory = '/'.join(sys.argv[0].split('/')[:-1]) + '/'
+	run_directory = os.path.join(os.path.split(output_dir)[:-1])[0]
 
 	# convert the similarity scores to the format used by octupus
 	if similarity == '1.0': similarity = '1'
-	if '0.' in similarity: similarity.replace('0.','')
+	if '0.' in similarity: similarity = similarity.replace('0.','')
 
 	# set the output directory
-	if output_dir[-1] != '/': output_dir = '/'.join(output_dir.split('/')[:-1]) + '/'
+	if output_dir[-1] != '/': output_dir = '/'.join(output_dir.split('/')[:-1])
 
+	print 'run'
+	print octu
+	print args.i
+	print similarity
+	print output_dir
 	# run the octupus cluster program
 	p = call([octu, args.i, similarity, '0', output_dir])
+	print 'done'
 
 	# rename the octupus cluster file so it can be used by the other scripts downstream
 	cmd_list = ['mv \"' + output_dir + 'octuall.seq\" \"' + output_dir + 'clustered\"']
@@ -112,7 +118,10 @@ def run_octupus (octu, similarity, output_dir):
 	for (paths, dirs, files) in os.walk('/'):
 		for file in files:
 			if 'formatdb.log' in file:
-				os.remove(os.path.join(paths, file))
+				try:
+					os.remove(os.path.join(paths, file))
+				except:
+					print('Cannot remove %s, needs admin rights' % os.path.join(paths, file))
 
 	for cmd in cmd_list:
 		p = call(cmd, shell = True)

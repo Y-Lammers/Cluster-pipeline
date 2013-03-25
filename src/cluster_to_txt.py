@@ -83,8 +83,8 @@ def get_tgicl_cluster (cluster_file):
 
 	# parse the singleton cluster file and add the singletons to the dictionary
 	for line in open(cluster_file + '.singletons', 'r'):
-		cluster_dic[cluster] = [line.strip()]
-		cluster += 1
+		cluster_dic[cluster_singleton] = [line.strip()]
+		cluster_singleton += 1
 	
 	return cluster_dic	
 
