@@ -39,7 +39,7 @@ def obtain_tax (code):
 
 	# based on the taxid the species and taxonomy are retrieved from the Entrez database
 	try:
-		Entrez.email = "quick@test.com"
+		Entrez.email = "idenpipe@gmail.com"
 		handle = Entrez.efetch(db="nucleotide", id= code, retmode="xml")
 		record = Entrez.read(handle)
 		taxon_info.append(record[0]["GBSeq_organism"]) # organism
@@ -78,9 +78,12 @@ def blast_bulk (sequences, thread_number):
 	fasta_handle = temp_fasta_file.read()
 
 	# blast the temporary file, and save the blasthits in the blast_list
-	result_handle = NCBIWWW.qblast(args.ba, args.bd, fasta_handle, megablast=args.me, hitlist_size=1)
+	try:	
+		result_handle = NCBIWWW.qblast(args.ba, args.bd, fasta_handle, megablast=args.me, hitlist_size=1)
 
-	blast_list += [item for item in NCBIXML.parse(result_handle)]
+		blast_list += [item for item in NCBIXML.parse(result_handle)]
+	except:
+		return 'failed'
 
 	# remove the temporary file		
 	os.remove(temp_file_path)
@@ -91,8 +94,19 @@ def blast_bulk (sequences, thread_number):
 	
 def parse_blast_align (sequences, thread, mode):
 	# import the biopython module to deal with fasta parsing
+	from Bio import SeqIO
+	
+	blast_count, blast_list = 0, 'failed'
+	while blast_list == 'failed' and blast_count < 3:
+		if blast_count > 0: print '\nblast thread: ' + str(thread) + ' failed, retrying attempt: '+ str(blast_count)
+		blast_list = blast_bulk(sequences, thread)
+		blast_count += 1
 
-	blast_list = blast_bulk(sequences, thread)
+	if blast_list == 'failed':
+		for seq in sequences:
+			write_results(seq.id + ',' + 'failed', mode)
+		return
+
 	count = 1	
 
 	# parse though the blast hits
@@ -144,12 +158,14 @@ def parse_seq_file ():
 	from Bio import SeqIO
 	import multiprocessing
 	import time
+	import sys
 	
 	# parse the fasta file
 	seq_list, sub_list = [seq for seq in SeqIO.parse(args.i, 'fasta')], []
 	
 	# blast each sequence in the seq_list list
 	procs, count, threads = [], 1, 10
+	print 'Blasting sequences\n' + str(len(seq_list))
 	while len(seq_list) > 0 or len(procs) > 0:
 		# start the maximum number of threads
 		while len(procs) < threads and len(seq_list) > 0:
@@ -164,6 +180,8 @@ def parse_seq_file ():
 				procs.append([p, time.time()])
 				p.start()
 				count+=1
+				sys.stdout.write('\r' + str(len(seq_list)))
+				sys.stdout.flush()
 			except:
 				break
 
@@ -176,6 +194,10 @@ def parse_seq_file ():
 					procs.remove(p)
 				# time-out after 30 minutes
 				elif time.time() - p[1] > 10800:
+					try:
+						print '\ntimeout proc: ' + str(p[0])
+					except:
+						pass
 					p[0].terminate()
 					procs.remove(p)
 			break	
